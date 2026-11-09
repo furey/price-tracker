@@ -1,4 +1,4 @@
-FROM node:24-bookworm-slim AS build
+FROM node:25-bookworm-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
@@ -7,7 +7,7 @@ COPY src ./src
 COPY web ./web
 RUN npm run build && npm prune --omit=dev
 
-FROM node:24-bookworm-slim
+FROM node:25-bookworm-slim
 ENV NODE_ENV=production DISABLE_AUTOUPDATER=1
 RUN npm install -g @anthropic-ai/claude-code@2.1.319 && npm cache clean --force
 WORKDIR /app
