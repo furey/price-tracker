@@ -88,6 +88,7 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/', activeMatch: '/guide/' },
       { text: 'Reference', link: '/reference/', activeMatch: '/reference/' },
+      { text: 'Discussions', link: `${repo}/discussions` },
       { text: 'GitHub', link: repo }
     ],
 

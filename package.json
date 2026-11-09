@@ -9,9 +9,6 @@
     "url": "https://github.com/furey/price-tracker.git"
   },
   "homepage": "https://furey.github.io/price-tracker/",
-  "bugs": {
-    "url": "https://github.com/furey/price-tracker/issues"
-  },
   "private": true,
   "type": "module",
   "engines": {
