@@ -1,0 +1,56 @@
+{
+  "id": "karcher-k7",
+  "name": "Kärcher K7",
+  "enabled": true,
+  "schedules": [
+    { "cron": "57 7 * * *", "tz": "Australia/Sydney" }
+  ],
+  "direct": [
+    { "retailer": "Tool Kit Depot", "url": "https://toolkitdepot.com.au/karcher-k7-premium-power-home-pressure-washer-1-317-172-0/", "category": "premium-power-home", "parser": "jsonld" }
+  ],
+  "directSchedules": [
+    { "cron": "30 7,19 * * *", "tz": "Australia/Sydney" }
+  ],
+  "ntfy": {
+    "server": "https://ntfy.sh",
+    "topic": "change-me-karcher-k7",
+    "tokenEnv": "NTFY_ACCESS_TOKEN"
+  },
+  "research": { "maxTurns": 80, "timeoutMinutes": 15 },
+  "product": "A genuine Kärcher K7 pressure washer with a maximum pressure of at least 180 bar (about 2600 PSI), an area performance of at least 60 m2/h, and an INTEGRATED HOSE REEL (hard requirement). Reject the K7 Power (no reel), the K7 Compact, the K5 or any lower model, accessories or kits sold alone, and \"K7-compatible\" parts. Verify by specs and by the Kärcher part number (1.317-xxx style) where the page shows it, not by the title alone. Note the kit contents (Home kit, Car kit, Smart Control app). If Bunnings is not the cheapest retailer, add \"Bunnings price beat: competitor less 5%\" to the notes.",
+  "categories": [
+    { "id": "smart-control-car-home", "description": "K7 Smart Control Car & Home: K7 Smart Control with both the Car kit and the Home kit, app-connected, integrated hose reel." },
+    { "id": "smart-control", "description": "K7 Smart Control (with or without a single Home kit), app-connected, integrated hose reel." },
+    { "id": "premium-power-home", "description": "K7 Premium Power Home (or K7 Premium Power Flex Home): integrated hose reel, Home kit, no app." },
+    { "id": "wcm-premium", "description": "K7 WCM Premium (water-cooled motor) with integrated hose reel, with or without a Home kit." }
+  ],
+  "rules": {
+    "smart-control-car-home": { "maxPrice": 1100, "maxPriceIfClearance": 900, "rrp": null, "minPctBelowRrp": 15 },
+    "smart-control": { "maxPrice": 1100, "rrp": null, "minPctBelowRrp": 15 },
+    "premium-power-home": { "maxPrice": 950, "rrp": null, "minPctBelowRrp": 15 },
+    "wcm-premium": { "maxPrice": 950, "rrp": null, "minPctBelowRrp": 15 }
+  },
+  "sources": {
+    "sites": [
+      { "name": "Amazon.com.au", "note": "Only listings sold by Amazon AU or by Kärcher. Reject third-party marketplace sellers." },
+      { "name": "Bunnings" },
+      { "name": "Total Tools" },
+      { "name": "Supercheap Auto" },
+      { "name": "Kärcher Australia", "url": "https://www.kaercher.com/au/" },
+      { "name": "Sydney Tools" },
+      { "name": "Tools For Sale" },
+      { "name": "Wholesale Supply" },
+      { "name": "Mitre 10" },
+      { "name": "Tool Kit Depot" },
+      { "name": "Repco" },
+      { "name": "Big W" },
+      { "name": "The Good Guys" },
+      { "name": "JB Hi-Fi" },
+      { "name": "OzBargain" }
+    ],
+    "searches": ["Karcher K7", "Karcher K7 pressure washer"],
+    "seasonalSearches": []
+  },
+  "dedupe": { "minDrop": 25 },
+  "heartbeat": { "monthly": true }
+}

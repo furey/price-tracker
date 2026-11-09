@@ -1,0 +1,51 @@
+name: price-tracker
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  app:
+    build: .
+    container_name: price-tracker
+    restart: unless-stopped
+    init: true
+    user: "${PUID:-1026}:${PGID:-100}"
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: "4280"
+      TZ: Australia/Sydney
+      NODE_ENV: production
+      HOME: /app/state/home
+      CLAUDE_BIN: claude
+      DISABLE_AUTOUPDATER: "1"
+    ports:
+      - "${HOST_PORT:-4280}:4280"
+    volumes:
+      - ./state:/app/state
+      - ./logs:/app/logs
+      - ./items:/app/items:ro
+    command: ["node", "src/cli.js", "daemon"]
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    mem_limit: 1g
+    pids_limit: 256
+    logging: *default-logging
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4280/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

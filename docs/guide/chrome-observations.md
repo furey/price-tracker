@@ -1,0 +1,104 @@
+---
+title: Chrome observations
+icon: globe
+description: Record prices you checked by hand in a browser, for sites that block both AI research and free checks.
+---
+
+# Chrome observations
+
+Some retailers block both AI research and free checks. You can still check their prices yourself in a browser, such as Chrome, and add the prices to an item's history. The dashboard shows these prices as **Chrome**.
+
+A recorded price goes through the same rules as any other price, so it can open a deal window and show as qualifying. It never sends an alert, and it does not change the item's schedules.
+
+## When to use it
+
+- The **Results by source** table shows a site as blocked on every AI check. See [Results by source](/guide/tuning#results-by-source).
+- A free check of the site says **Blocked**.
+- The dashboard lists the site under **Sites asking for a human check**. See [Bot checks](#bot-checks).
+- You saw a price in a shop or in a browser and want it in the history.
+
+Chrome checks also feed the tuning suggestions. When the AI cannot read a site but a Chrome check can, the app suggests weekly checks for the site.
+
+## Blocked sites
+
+Large retailers in any region can refuse the AI's page fetches. In a US dry run (`REGION=us`, a DeWalt drill), Home Depot, Lowe's, Amazon, Walmart, and Acme Tools refused with HTTP `403`, HTTP `503`, or a CAPTCHA page, and Slickdeals answered `403`. Research then had only search-result snippets. Every listing was unverified, so nothing could alert. Some Australian sites block too; see [Results by source](/guide/tuning#results-by-source).
+
+### Bot checks
+
+Scheduled checks run with nobody watching, so the app never solves a CAPTCHA or a bot check and never tries to get past one. When a site asks for one, the app records the check as blocked, marks the site **Bot check**, and moves on to the next site.
+
+The next time you open the dashboard, a **Sites asking for a human check** notice sits above the item cards. It lists each site, its item, and the time of the bot check, with a link to that item's **Sources**. The site name links to the page the check tried, so you can open it yourself; a site with no known page has no link. **Got it** hides the notice. A new bot check from the same site after that shows the notice again.
+
+The app sends no phone alert for a bot check. The monthly heartbeat lists the sites that asked for one in its run.
+
+### Handle a bot check
+
+Handle a bot check in your own time. These steps help, in order:
+
+1. **Chrome check**: open the product page in your own browser, then record the price with the `record` command or the observations API. Claude in Chrome can read the page for you in your real browser session, or you can read it yourself. The run counts as a manual run and sends no alert. A Chrome check newer than the bot check clears the **Bot check** mark.
+2. **Free check**: if the shop is Shopify or publishes JSON-LD, add a free check of the exact product page. See [Free direct checks](/guide/direct-checks).
+3. **Tuning**: set a site that asks every time to **Check weekly**, or press **Mute site**, to save AI runs. A muted site shows no **Bot check** mark.
+
+The app has no automatic Chrome sweep; each Chrome check is one you start. A Chrome check that reads a site the AI could not also triggers the tuning suggestion for weekly checks of that site.
+
+## Write the file
+
+Write the prices in a JSON file with the same shape as an AI research result: the check time, the sources you checked, and the listings you found.
+
+```json
+{
+  "checkedAt": "2026-11-08T10:05:00+11:00",
+  "sources": [
+    { "name": "Total Tools", "status": "ok", "note": "Checked in Chrome" }
+  ],
+  "listings": [
+    {
+      "retailer": "Total Tools",
+      "title": "Karcher K7 Water Cooled Motor Pressure Washer 1.317-401.0",
+      "category": "wcm-premium",
+      "price": 899,
+      "wasPrice": 1049,
+      "effectivePrice": 899,
+      "deliveryCost": null,
+      "isClearance": false,
+      "inStock": true,
+      "verified": true,
+      "url": "https://www.totaltools.com.au/example-product",
+      "evidence": "Price $899 shown on the product page, Add to Cart available",
+      "notes": "Checked in Chrome"
+    }
+  ]
+}
+```
+
+- **`checkedAt`**: the date and time you checked.
+- **`sources`**: each site you checked, with a `status` of `ok`, `blocked`, `error`, or `not_found`, and a short `note`.
+- **`category`**: one of the item's category ids, or `reject`. The category ids are on the edit page, under **What to look for**.
+- **`isClearance`**, **`inStock`**, and **`verified`**: `true` or `false`. These fields are required.
+- **`price`**, **`wasPrice`**, **`effectivePrice`**, and **`deliveryCost`**: numbers in the region currency, or `null` when not known. The app still accepts the old names `priceAud`, `wasPriceAud`, `effectivePriceAud`, and `deliveryAud`.
+- **`url`**: a public `http` or `https` address, or `null`.
+
+The full field list is in [Research contract](/reference/research-contract).
+
+## Record the file
+
+With Docker:
+
+1. Copy the file into the `state` folder of the app on the NAS.
+2. Run the `record` command in the container, with the item id and the file:
+
+   ```bash
+   docker exec price-tracker node src/cli.js record karcher-k7 state/chrome-2026-11-08.json
+   ```
+
+On a Mac, run the command in the project folder:
+
+```bash
+node src/cli.js record karcher-k7 chrome-2026-11-08.json
+```
+
+The command checks the file, records the prices as a new run, and prints the decision: which listings qualify. If the file has a problem, the command names each field to fix and records nothing.
+
+## From a script
+
+`POST /api/items/<id>/observations` takes the same JSON and records it the same way. It needs a signed-in session and a same-origin JSON request, like the other changes the dashboard makes. See [HTTP API](/reference/http-api).

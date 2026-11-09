@@ -1,0 +1,8 @@
+[
+  "WebSearch",
+  "WebFetch(domain:*.au)",
+  "WebFetch(domain:kogan.com)",
+  "WebFetch(domain:*.kogan.com)",
+  "WebFetch(domain:marketplace.qantas.com)",
+  "WebFetch(domain:www.kaercher.com)"
+]

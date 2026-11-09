@@ -1,0 +1,52 @@
+[
+  {
+    "args": [
+      "-p",
+      "You are a price researcher. Today is 2026-11-06 (America/New_York time).\nYour job: find every current US listing of the product below and report each one as JSON.\nYou only collect facts. You do NOT decide whether a listing is a good deal. You do NOT decide whether to send an alert. A separate program makes those decisions.\n\nPRODUCT\nA new DeWalt 20V MAX XR brushless 1/2 in. compact drill/driver, model DCD791. Accept the kit DCD791D2 (two 2.0Ah batteries, charger, bag) and the tool-only DCD791B. Reject the DCD791P1, the DCD771, the DCD777, the DCD800, hammer drills (DCD796, DCD805), combo kits with other tools, and used, renewed, or refurbished units. Verify the model number on the page, not the title alone. Note the battery count and size.\n\nCATEGORIES\nGive every listing exactly one category id from this list, in preference order, or \"reject\".\n- kit: DCD791D2: drill/driver with two 2.0Ah batteries, charger, and bag.\n- bare: DCD791B: drill/driver only, no battery or charger.\n- reject: the listing is not the product, or breaks a rule below. Put the reason in rejectReason.\n\nRULES\n1. Search every source and every search phrase listed under SOURCES.\n2. List every candidate you find, including candidates you reject. For a reject, set category to \"reject\" and explain it in rejectReason. Never leave a candidate out.\n3. Open the product page of each candidate with WebFetch. Set verified to true only if you saw the price on that product page during this run. Set verified to false if you did not.\n4. Slickdeals: you may include a post that is less than 7 days old (today is 2026-11-06) and not marked expired. Set verified to false, and put the post URL in url and evidence. Reject posts that are 7 days old or older, or marked expired.\n5. Accept only US retailers that sell in USD and ship within the United States, with a US warranty. Reject overseas listings (Canada, UK, Australia, and others). These appear often in search results.\n6. US prices exclude sales tax. Record the listed price before tax. Never add sales tax to price, effectivePrice, or deliveryCost.\n7. Reject Craigslist, Facebook Marketplace, and any refurbished, used, renewed, or open-box item. Reject marketplace third-party sellers, except on eBay as rule 8 allows.\n8. eBay: accept a listing only if the condition is New, the seller is a US business (item located in the United States and ships from the United States), and the listing states a US warranty or the seller is the brand's or a known retailer's official eBay store. Reject used, refurbished, open-box, overseas, grey-import, and private sellers. Put the seller name in notes (for example \"Sold by X on eBay\").\n9. Amazon.com: accept a listing only if it is sold by Amazon.com or by the brand itself. Reject every other seller.\n10. Walmart.com: accept a listing only if it is sold by Walmart.com or by the brand itself. Reject Walmart Marketplace third-party sellers.\n11. If a site blocks you or refuses to load, set that source status to \"blocked\" and move on. Never try to get around a block. If a site shows a CAPTCHA or a bot check, never try to solve it, and write \"CAPTCHA\" or \"bot check\" in that source note. WebFetch opens only the sites under SOURCES and a few known US retailers; a denied fetch counts as blocked.\n12. Never invent a price, a URL, or a stock state. If you cannot see a value on a page, use null (or false for inStock) and say so in notes.\n13. effectivePrice is the price a buyer pays after any gift card, cashback, or promo code you can verify. Without such a promo, it equals price. Describe the promo in notes. Member prices and coupons follow the MEMBERSHIPS section.\n14. Set retailer to the exact source name from SOURCES when the listing is on that site. If a marketplace seller or another party sells the item, put that seller in notes (for example \"Sold by X\"), not in retailer. For eBay, set retailer to \"eBay\".\n15. You have at most 25 turns. Do not spend them all on one site.\n\nOUTPUT\nReturn one JSON object with exactly this shape:\n```json\n{\n  \"checkedAt\": \"2026-01-01T00:00:00+11:00\",\n  \"sources\": [\n    {\n      \"name\": \"Example Retailer\",\n      \"status\": \"ok\",\n      \"note\": \"\",\n      \"url\": \"https://example.com/search\"\n    }\n  ],\n  \"listings\": [\n    {\n      \"retailer\": \"Example Retailer\",\n      \"title\": \"Product title\",\n      \"category\": \"category-id\",\n      \"part\": null,\n      \"rejectReason\": null,\n      \"price\": 0,\n      \"wasPrice\": null,\n      \"effectivePrice\": 0,\n      \"deliveryCost\": null,\n      \"isClearance\": false,\n      \"inStock\": true,\n      \"verified\": true,\n      \"url\": \"https://example.com/product\",\n      \"evidence\": \"Text seen on the page\",\n      \"notes\": \"\"\n    }\n  ]\n}\n```\nField meanings:\n- checkedAt: the time you finished, as an ISO 8601 string.\n- sources[].name: the source name as listed under SOURCES. Report every source.\n- sources[].status: \"ok\" (searched and read), \"blocked\" (the site blocked you), \"error\" (the site failed to load), or \"not_found\" (the site has no matching product).\n- sources[].note: one short sentence, or an empty string.\n- sources[].url: the exact page URL you opened or tried for this source, or null.\n- listings[].retailer: the exact source name from SOURCES when the listing is on that site, with no extra words, seller names, or URLs. Otherwise the shop name.\n- listings[].title: the product title as shown on the page.\n- listings[].category: a category id from CATEGORIES, or \"reject\".\n- listings[].part: a kit part id from KITS for an accessory listing, otherwise null.\n- listings[].rejectReason: why you rejected it, or null when category is not \"reject\".\n- listings[].price: the current price in USD as a number, or null if unknown.\n- listings[].wasPrice: the crossed-out \"was\" price as a number, or null.\n- listings[].effectivePrice: see rule 13. Use null only if price is null.\n- listings[].deliveryCost: the delivery cost as a number (0 for free), or null if unknown.\n- listings[].isClearance: true if the page marks the item as clearance, else false.\n- listings[].inStock: true only if the page shows the item as available to buy.\n- listings[].verified: see rule 3.\n- listings[].url: the exact page URL you opened, or the Slickdeals post URL.\n- listings[].evidence: the exact text on the page that shows the price and the model.\n- listings[].notes: colour, bundle contents, promos, and anything else the product description asks you to note, or an empty string.\nNumbers are plain JSON numbers (1049, not \"$1,049\").\n\nMEMBERSHIPS\nThe buyer holds no memberships.\nApply a member price or member coupon to effectivePrice only for a membership in that list (for example an Amazon Prime or Walmart+ member price, or a member coupon shown on the listing). Name the promo in notes.\nFor a membership not in the list, never apply its trade or member price. Report the normal price instead, or reject the listing with a rejectReason that names the membership.\n\nSOURCES\nSites to check:\n- Home Depot (https://www.homedepot.com/)\n- Lowe's (https://www.lowes.com/)\n- Amazon (https://www.amazon.com/): Only listings sold by Amazon.com or by DeWalt.\n- Walmart (https://www.walmart.com/)\n- Acme Tools (https://www.acmetools.com/)\n- Slickdeals (https://slickdeals.net/)\nSearch phrases to run:\n- DeWalt DCD791D2\n- DeWalt DCD791B\n\nReturn the JSON in one final ```json fenced block and write nothing after it.",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--tools",
+      "WebSearch,WebFetch",
+      "--allowedTools",
+      "WebSearch,WebFetch(domain:amazon.com),WebFetch(domain:*.amazon.com),WebFetch(domain:walmart.com),WebFetch(domain:*.walmart.com),WebFetch(domain:target.com),WebFetch(domain:*.target.com),WebFetch(domain:bestbuy.com),WebFetch(domain:*.bestbuy.com),WebFetch(domain:homedepot.com),WebFetch(domain:*.homedepot.com),WebFetch(domain:lowes.com),WebFetch(domain:*.lowes.com),WebFetch(domain:costco.com),WebFetch(domain:*.costco.com),WebFetch(domain:bhphotovideo.com),WebFetch(domain:*.bhphotovideo.com),WebFetch(domain:newegg.com),WebFetch(domain:*.newegg.com),WebFetch(domain:ebay.com),WebFetch(domain:*.ebay.com),WebFetch(domain:slickdeals.net),WebFetch(domain:*.slickdeals.net),WebFetch(domain:www.homedepot.com),WebFetch(domain:www.lowes.com),WebFetch(domain:www.amazon.com),WebFetch(domain:www.walmart.com),WebFetch(domain:www.acmetools.com)",
+      "--permission-mode",
+      "dontAsk",
+      "--strict-mcp-config",
+      "--restricted",
+      "--disable-slash-commands",
+      "--settings",
+      "{\"cleanupPeriodDays\":14}",
+      "--max-turns",
+      "25",
+      "--model",
+      "sonnet"
+    ]
+  },
+  {
+    "args": [
+      "-p",
+      "Your last reply was not valid. Return ONLY the JSON object matching the schema, in one ```json block. Errors: No valid JSON found in the reply: Unexpected token 'o', \"nope\" is not valid JSON",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--tools",
+      "WebSearch,WebFetch",
+      "--allowedTools",
+      "WebSearch,WebFetch(domain:amazon.com),WebFetch(domain:*.amazon.com),WebFetch(domain:walmart.com),WebFetch(domain:*.walmart.com),WebFetch(domain:target.com),WebFetch(domain:*.target.com),WebFetch(domain:bestbuy.com),WebFetch(domain:*.bestbuy.com),WebFetch(domain:homedepot.com),WebFetch(domain:*.homedepot.com),WebFetch(domain:lowes.com),WebFetch(domain:*.lowes.com),WebFetch(domain:costco.com),WebFetch(domain:*.costco.com),WebFetch(domain:bhphotovideo.com),WebFetch(domain:*.bhphotovideo.com),WebFetch(domain:newegg.com),WebFetch(domain:*.newegg.com),WebFetch(domain:ebay.com),WebFetch(domain:*.ebay.com),WebFetch(domain:slickdeals.net),WebFetch(domain:*.slickdeals.net),WebFetch(domain:www.homedepot.com),WebFetch(domain:www.lowes.com),WebFetch(domain:www.amazon.com),WebFetch(domain:www.walmart.com),WebFetch(domain:www.acmetools.com)",
+      "--permission-mode",
+      "dontAsk",
+      "--strict-mcp-config",
+      "--restricted",
+      "--disable-slash-commands",
+      "--settings",
+      "{\"cleanupPeriodDays\":14}",
+      "--max-turns",
+      "25",
+      "--model",
+      "sonnet",
+      "--resume",
+      "sess-1"
+    ]
+  }
+]

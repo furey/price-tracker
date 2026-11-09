@@ -1,0 +1,6 @@
+node_modules
+state
+logs
+.env
+web/dist
+.git

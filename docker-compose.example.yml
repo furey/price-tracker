@@ -1,0 +1,70 @@
+# Docker Compose file for Price Tracker.
+#
+# Save it as `docker-compose.yml` in an empty folder, put a `.env` beside it
+# (copy `.env.example` and fill in at least APP_PASSWORD and SESSION_SECRET),
+# then run `docker compose up -d`. install.sh does all of this for you.
+#
+# Create ./state and ./logs before the first start, owned by PUID:PGID; the
+# container runs as that user and writes the database, locks, and Claude Code
+# files to ./state. Docker creates a missing folder as root, and the app then
+# cannot write to it.
+#
+# These values are read from `.env` by Compose itself:
+#   PUID=1000        # the user that owns ./state and ./logs (`id -u`)
+#   PGID=1000        # that user's group (`id -g`)
+#   HOST_PORT=4280   # the port on this host
+#   TZ=UTC           # the container clock; the app uses TIME_ZONE for its days
+#
+# The image ships example items with placeholder ntfy topics. Run
+# `docker exec price-tracker node src/cli.js rotate-topics` once after the
+# first start, then subscribe to the new topics in the ntfy app.
+
+name: price-tracker
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  app:
+    image: ghcr.io/furey/price-tracker:latest
+    container_name: price-tracker
+    restart: unless-stopped
+    init: true
+    user: "${PUID:-1000}:${PGID:-1000}"
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: "4280"
+      TZ: ${TZ:-UTC}
+      NODE_ENV: production
+      HOME: /app/state/home
+      CLAUDE_BIN: claude
+      DISABLE_AUTOUPDATER: "1"
+    ports:
+      - "${HOST_PORT:-4280}:4280"
+    volumes:
+      - ./state:/app/state
+      - ./logs:/app/logs
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    mem_limit: 1g
+    pids_limit: 256
+    logging: *default-logging
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4280/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

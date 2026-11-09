@@ -1,0 +1,75 @@
+{
+  "id": "springfree-medium-oval",
+  "name": "Springfree Medium Oval",
+  "enabled": true,
+  "schedules": [
+    { "cron": "45 7 * * *", "tz": "Australia/Sydney", "until": "2026-12-02" },
+    { "cron": "45 7 * * 2,5", "tz": "Australia/Sydney", "from": "2026-12-02" }
+  ],
+  "direct": [
+    { "retailer": "Springfree Trampoline AU", "url": "https://www.springfreetrampoline.com.au/products/medium-oval-trampoline", "category": "base", "parser": "shopify" },
+    { "retailer": "Springfree Trampoline AU", "url": "https://www.springfreetrampoline.com.au/products/moving-bundle", "category": "bundle", "parser": "shopify", "variantFilter": "medium oval" },
+    { "retailer": "Springfree Trampoline AU", "url": "https://www.springfreetrampoline.com.au/products/sports-bundle", "category": "bundle", "parser": "shopify", "variantFilter": "medium oval" },
+    { "retailer": "Springfree Trampoline AU", "url": "https://www.springfreetrampoline.com.au/products/sun-bundle", "category": "sun-bundle", "parser": "shopify", "variantFilter": "medium oval" },
+    { "retailer": "Springfree Trampoline AU", "url": "https://www.springfreetrampoline.com.au/products/sun-shade", "part": "sunshade", "parser": "shopify", "variantFilter": "^sun shade - medium oval$" },
+    { "retailer": "Springfree Trampoline AU", "url": "https://www.springfreetrampoline.com.au/products/flexrstep", "part": "flexrstep", "parser": "shopify" },
+    { "retailer": "Springfree Trampoline AU", "url": "https://www.springfreetrampoline.com.au/products/shifting-wheels", "part": "wheels", "parser": "shopify" },
+    { "retailer": "Myer", "url": "https://www.myer.com.au/p/springfree-trampoline-medium-oval-24m-x-34m-trampoline", "category": "base", "parser": "jsonld" },
+    { "retailer": "Myer", "url": "https://www.myer.com.au/p/springfree-trampoline-medium-oval-trampoline-24m-x-34m---moving-accessory-bundle-basketball-hoop--ladder-and-wheels", "category": "bundle", "parser": "jsonld" },
+    { "retailer": "Myer", "url": "https://www.myer.com.au/p/springfree-trampoline-medium-oval-trampoline-24m-x-34m---sports-accessory-bundle-basketball-hoop--ladder-and-bag", "category": "bundle", "parser": "jsonld" }
+  ],
+  "directSchedules": [
+    { "cron": "30 7,19 * * *", "tz": "Australia/Sydney" }
+  ],
+  "ntfy": {
+    "server": "https://ntfy.sh",
+    "topic": "change-me-springfree-medium-oval",
+    "tokenEnv": "NTFY_ACCESS_TOKEN"
+  },
+  "research": { "maxTurns": 80, "timeoutMinutes": 15 },
+  "product": "A Springfree Medium Oval trampoline, model O77, 8 ft x 11 ft (2.4 m x 3.4 m), any colour, from any Australian retailer. Reference page: https://www.springfreetrampoline.com.au/products/medium-oval-trampoline (RRP $1,999). Bundles count (Moving, Sports, Sun, or any bundle that is the O77 plus accessories). Reject other Springfree sizes (Compact Oval, Large Oval, Jumbo Square, round models), other brands, and NZ, US, or Canada listings, which appear often in searches. Note the colour, the bundle contents, and any free accessory or free installation promo.",
+  "categories": [
+    { "id": "sun-bundle", "description": "The O77 Medium Oval Sun Bundle, or any bundle that includes the trampoline plus a sunshade, a ladder/step, and wheels." },
+    { "id": "bundle", "description": "The O77 Medium Oval sold together with accessories (Moving, Sports, Sun, or any other bundle)." },
+    { "id": "base", "description": "The O77 Medium Oval trampoline on its own." }
+  ],
+  "kits": [
+    {
+      "id": "sun-kit",
+      "name": "Sun Bundle kit",
+      "category": "sun-bundle",
+      "parts": [
+        { "id": "trampoline", "name": "Trampoline", "match": "base" },
+        { "id": "sunshade", "name": "Sunshade", "description": "Springfree sunshade that fits the Medium Oval (2.4 m x 3.4 m)" },
+        { "id": "flexrstep", "name": "FlexrStep", "description": "Springfree FlexrStep ladder/step" },
+        { "id": "wheels", "name": "Shifting Wheels", "description": "Springfree Shifting Wheels for the Medium Oval" }
+      ]
+    }
+  ],
+  "rules": {
+    "sun-bundle": { "maxPrice": 1950, "rrp": 2456, "minPctBelowRrp": 20 },
+    "bundle": { "maxPrice": 1750 },
+    "base": { "maxPrice": 1600, "rrp": 1999 }
+  },
+  "sources": {
+    "sites": [
+      { "name": "Springfree Trampoline AU", "url": "https://www.springfreetrampoline.com.au/" },
+      { "name": "Myer" },
+      { "name": "Harvey Norman" },
+      { "name": "Temple & Webster" },
+      { "name": "Qantas Marketplace" },
+      { "name": "MyDeal" },
+      { "name": "Amazon.com.au" },
+      { "name": "Bing Lee" },
+      { "name": "Big W" },
+      { "name": "BuyWisely", "note": "Good for cross-retailer price comparison." },
+      { "name": "OzBargain" }
+    ],
+    "searches": ["Springfree Medium Oval trampoline", "Springfree O77"],
+    "seasonalSearches": [
+      { "phrase": "Springfree Black Friday", "from": "2026-11-01", "until": "2026-12-01", "note": "Black Friday is 27 Nov 2026 and Cyber Monday is 30 Nov 2026." }
+    ]
+  },
+  "dedupe": { "minDrop": 25 },
+  "heartbeat": { "monthly": true }
+}

@@ -1,0 +1,13 @@
+{
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD024": { "siblings_only": true },
+    "MD025": { "front_matter_title": "" },
+    "MD028": false,
+    "MD033": { "allowed_elements": ["a", "BrowserFrame", "Diagram", "h1", "br", "div", "em", "Illustration", "img", "p", "picture", "source", "strong", "style", "sub", "code"] },
+    "MD041": false,
+    "MD051": false
+  },
+  "ignores": [".handover/**", "**/node_modules/**", "docs/.vitepress/dist/**", "docs/.vitepress/cache/**"]
+}

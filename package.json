@@ -1,0 +1,43 @@
+{
+  "name": "price-tracker",
+  "version": "0.1.0",
+  "description": "Self-hosted deal tracker: describe what you want to buy, and get notified when a shop meets your price.",
+  "license": "MIT",
+  "author": "James Furey",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/furey/price-tracker.git"
+  },
+  "homepage": "https://furey.github.io/price-tracker/",
+  "bugs": {
+    "url": "https://github.com/furey/price-tracker/issues"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "bin": {
+    "price-tracker": "src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "build": "vite build",
+    "dev:web": "vite",
+    "serve": "node src/cli.js serve",
+    "docs:dev": "npm --prefix docs run dev",
+    "docs:build": "npm --prefix docs run build",
+    "docs:preview": "npm --prefix docs run preview",
+    "diagrams": "node scripts/diagrams/build.mjs",
+    "og": "scripts/generate-og.sh"
+  },
+  "dependencies": {
+    "croner": "^11.0.0",
+    "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.10",
+    "vite": "^8.3.6",
+    "vue": "^3.5.45"
+  }
+}

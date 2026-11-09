@@ -1,0 +1,36 @@
+{
+  "id": "dewalt-dcd791",
+  "name": "DeWalt DCD791 drill",
+  "enabled": true,
+  "schedules": [
+    { "cron": "15 8 * * *", "tz": "America/New_York" }
+  ],
+  "ntfy": {
+    "server": "https://ntfy.sh",
+    "topic": "change-me-dewalt-dcd791"
+  },
+  "research": { "maxTurns": 25, "timeoutMinutes": 15, "model": "sonnet" },
+  "product": "A new DeWalt 20V MAX XR brushless 1/2 in. compact drill/driver, model DCD791. Accept the kit DCD791D2 (two 2.0Ah batteries, charger, bag) and the tool-only DCD791B. Reject the DCD791P1, the DCD771, the DCD777, the DCD800, hammer drills (DCD796, DCD805), combo kits with other tools, and used, renewed, or refurbished units. Verify the model number on the page, not the title alone. Note the battery count and size.",
+  "categories": [
+    { "id": "kit", "description": "DCD791D2: drill/driver with two 2.0Ah batteries, charger, and bag." },
+    { "id": "bare", "description": "DCD791B: drill/driver only, no battery or charger." }
+  ],
+  "rules": {
+    "kit": { "maxPrice": 159, "rrp": 229, "minPctBelowRrp": 25 },
+    "bare": { "maxPrice": 99, "rrp": 149, "minPctBelowRrp": 25 }
+  },
+  "sources": {
+    "sites": [
+      { "name": "Home Depot", "url": "https://www.homedepot.com/" },
+      { "name": "Lowe's", "url": "https://www.lowes.com/" },
+      { "name": "Amazon", "url": "https://www.amazon.com/", "note": "Only listings sold by Amazon.com or by DeWalt." },
+      { "name": "Walmart", "url": "https://www.walmart.com/" },
+      { "name": "Acme Tools", "url": "https://www.acmetools.com/" },
+      { "name": "Slickdeals", "url": "https://slickdeals.net/" }
+    ],
+    "searches": ["DeWalt DCD791D2", "DeWalt DCD791B"],
+    "seasonalSearches": []
+  },
+  "dedupe": { "minDrop": 10 },
+  "heartbeat": { "monthly": true }
+}

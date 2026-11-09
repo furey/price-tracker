@@ -1,0 +1,93 @@
+---
+title: The item page
+icon: layout-dashboard
+description: Everything on an item page, from the lowest recent price and deal windows to the price chart, the latest listings, runs, alerts, and the evidence for each price.
+---
+
+# The item page
+
+Press an item name on the item list to open its page. The top of the page answers "is there a deal now?". The folded sections below it hold the detail. Press a section title to open or close it; the page remembers which sections you opened.
+
+![The top of an item page](/screenshots/item-page-top.png)
+
+## Header buttons
+
+- **Pause** or **Resume**: stops or starts this item's scheduled checks. See [Pause and resume](/guide/items#pause-and-resume).
+- **Edit**: opens the [edit page](/guide/editing).
+- **Run now**: runs one AI research check now. It saves the prices and sends any alert that qualifies.
+- **Dry run**: runs one AI research check now, but saves no prices and sends no alerts.
+
+Both runs ask you to confirm, and use about 7 to 10 minutes of Claude time. You cannot stop a run from the dashboard once it starts. When AI checks are paused or over your reserve, the page shows why and offers **Run anyway**. See [Claude usage and the AI cap](/guide/claude-usage).
+
+## Summary
+
+- **Lowest recent**: the lowest effective price in the last 30 days, with its category and retailer.
+- **Last run**: the status of the last run, such as **OK**, **Failed**, or **Skipped**.
+- **Next checks**: the time of the next **AI** check and the next **Free** check.
+- **Last alert**: when the last alert went out, and its kind.
+
+Under the summary, **Checks** lists the AI research schedule in words, in your time zone. The label names the zone, for example **Checks (Sydney time)**.
+
+## Deal windows
+
+A deal window is a run of days when one retailer's listing met your rules. **Live now** means the deal was still there on the last check. **Ended** means it went away, which is a missed deal. Each window says whether an alert was sent. It also names the kind of check that found the deal: **AI research**, **Curl** (a [free check](/guide/direct-checks)), or **Chrome** (a [price you recorded by hand](/guide/chrome-observations)).
+
+Press **See evidence** to open the day's prices, or **Open listing** to go to the retailer.
+
+## Lowest ever
+
+One card per category shows the cheapest effective price ever recorded, with the retailer, the date, and how it was found. Press **See evidence** to open that day.
+
+## Price history
+
+The chart shows the lowest price per retailer per day for one category at a time. Press a category name to switch, and press **30 days**, **90 days**, or **365 days** to change the range. The marker shape shows how each price was found: **AI research**, **Curl** (a free check), **Chrome**, or **Kit**. A dashed line marks the alert price.
+
+Press a retailer in the key to show only that retailer; the price scale then fits that retailer. Press it again, or press another retailer, to change the focus. A category or range change keeps the focus if that retailer is still in the chart. The table shows the focused retailer only.
+
+Press a day on the chart to open its evidence. Press **Show as table** to see the same prices as a table. Tick **Show muted** to include muted prices, greyed.
+
+## Folded sections
+
+- **Tuning**: suggestions and everything you muted. See [Tuning](/guide/tuning).
+- **Sources**: the **Results by source** table, then each site, search phrase, and free check with buttons to tune it. A site or free check name links to the page that was checked, when the app knows it. When it does not know the page, a known retailer links to its home page and the link says "(home page)". A site whose latest check met a CAPTCHA or a bot check shows **Bot check** and the line "Open the page in your own browser when you have time, then record the price as a Chrome check." See [Results by source](/guide/tuning#results-by-source) and [Bot checks](/guide/chrome-observations#bot-checks).
+- **Kit prices**: for an item with kits, the cheapest set of parts from each retailer, summed.
+- **Retailers**: one row per retailer, with the **Latest**, **Delivered**, **Lowest**, and **Highest** prices, **Last seen**, and a small **Trend** line.
+- **Price changes**: each time a retailer's price went **Down** or **Up**. Press **Evidence** to open that day.
+- **Latest listings**: every listing from the latest successful run. See [Latest listings](#latest-listings).
+- **Recent runs**: each run with its start time, **Status**, **Trigger** (**Scheduled**, **Manual**, or **Dry run**), listings found, listings that qualified, and cost.
+- **Recent alerts**: each alert sent, with **Delivered** or **Not delivered**. See [Recent alerts](#recent-alerts).
+- **Phone alerts**: the item's ntfy topic, with **Copy topic** and **Open in browser**.
+
+## Latest listings
+
+![The Latest listings table](/screenshots/latest-listings.png)
+
+Each row is one listing from the latest successful run, including the ones the AI rejected:
+
+- **Retailer**: the retailer, the listing title, the notes, and the reason for a rejection.
+- **Category**: the model the listing belongs to, or `reject`. A label shows **Muted model** or **Hidden product** for a muted listing. **Mute model** mutes the category from this row.
+- **Price** and **Effective**: the listed price (with the was price), and the price after any promotion (with the delivery cost when known).
+- **Verified**: **Verified** when the price was seen on the product page itself, otherwise **Unverified**.
+- **Qualifies**: **Best deal** for the listing the alert named, **Qualifies** for another listing that met your rules, or **No**. The note under it gives the reason, such as `under $950 cap`.
+
+Muted listings are hidden. Tick **Show muted** to see them greyed. Press a column title to sort.
+
+## Recent alerts
+
+Each alert shows its kind (**Deal**, **Check this**, **Muted price**, **Heartbeat**, or **Test**), the time, and whether ntfy accepted it. A deal has two links: **Why it alerted, and Not what I want**, and **Open listing**. A **Check this** notice has **Why it was held back** instead, and no listing link.
+
+## Alert page
+
+A deal alert on your phone opens the alert page. It shows the listing and the evidence text from the retailer's page. **Why it alerted** gives the rule and version that applied, the rank of the listing, and the check against the previous alert.
+
+![The alert page for a deal](/screenshots/alert-page.png)
+
+- **See every price that day** opens the day's evidence.
+- **Open the run** shows the sources the run checked.
+- **Not what I want** tunes the item from this alert. See [Not what I want](/guide/alerts#not-what-i-want).
+
+## Day evidence
+
+**See evidence**, **Evidence**, a day on the chart, and **See every price that day** all open a side panel for one day (in your time zone). It lists every price seen that day. Each price shows the retailer, the title, the category, the time, and how it was found. It also shows the effective price, **Verified**, **Qualifies**, the promotion notes, the evidence text, and **Open listing**.
+
+![The evidence panel for one day](/screenshots/day-drawer.png)

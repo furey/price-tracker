@@ -1,0 +1,165 @@
+@font-face {
+  font-family: "Inter cv01";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./fonts/inter-latin-cv01.woff2") format("woff2");
+}
+
+:root {
+  --vp-font-family-base: "Inter cv01", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+
+  --vp-c-brand-1: #6d28d9;
+  --vp-c-brand-2: #5b21b6;
+  --vp-c-brand-3: #7c3aed;
+  --vp-c-brand-soft: rgba(124, 58, 237, 0.14);
+  --vp-c-brand-softer: rgba(124, 58, 237, 0.07);
+
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-bg: #7c3aed;
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-hover-bg: #6d28d9;
+  --vp-button-brand-active-border: transparent;
+  --vp-button-brand-active-text: #ffffff;
+  --vp-button-brand-active-bg: #5b21b6;
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #7c3aed 25%, #c026d3);
+
+  --pt-surface-1: #f4f4f5;
+  --pt-surface-3: #d4d4d8;
+  --pt-hairline: rgba(9, 9, 11, 0.14);
+}
+
+.dark {
+  --vp-c-brand-1: #a78bfa;
+  --vp-c-brand-2: #8b5cf6;
+  --vp-c-brand-3: #7c3aed;
+  --vp-c-brand-soft: rgba(124, 58, 237, 0.2);
+  --vp-c-brand-softer: rgba(124, 58, 237, 0.1);
+
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #a78bfa 25%, #e879f9);
+
+  --pt-surface-1: #141417;
+  --pt-surface-3: #2a2a30;
+  --pt-hairline: rgba(255, 255, 255, 0.09);
+
+  --vp-c-bg: #09090b;
+  --vp-c-bg-alt: #0e0e11;
+  --vp-c-bg-soft: #18181b;
+  --vp-c-bg-elv: #18181b;
+  --vp-c-bg-elv-mute: #1f1f23;
+
+  --vp-c-gutter: #050506;
+  --vp-c-divider: #27272a;
+  --vp-c-border: #27272a;
+
+  --vp-c-text-1: #f4f4f5;
+  --vp-c-text-2: #a1a1aa;
+  --vp-c-text-3: #71717a;
+}
+
+body {
+  font-feature-settings: "cv01" 1;
+}
+
+.vp-doc table,
+.vp-doc code,
+kbd {
+  font-feature-settings: "tnum" 1, "cv01" 1;
+}
+
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3,
+.vp-doc h4,
+.VPHero .name,
+.VPHero .text,
+.VPFeature .title,
+h1.title,
+.VPDocOutlineItem {
+  letter-spacing: -0.025em;
+}
+
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3,
+.vp-doc h4,
+.VPHero .name,
+.VPHero .text,
+.VPFeature .title,
+.vp-doc .custom-block-title,
+.vp-doc figcaption {
+  text-wrap: balance;
+}
+
+.VPHero .tagline,
+.VPFeature .details,
+.vp-doc p,
+.vp-doc li {
+  text-wrap: pretty;
+}
+
+.vp-doc .no-break {
+  white-space: nowrap;
+}
+
+.VPDoc.has-aside .content-container {
+  max-width: 768px;
+}
+
+.VPHero {
+  overflow-x: clip;
+}
+
+.VPHero .image {
+  max-width: none;
+}
+
+.VPHero .image-container {
+  transform: none;
+  padding: 0;
+  max-width: 560px;
+}
+
+.VPHero .image-bg {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .VPHero .image-container {
+    max-width: 100%;
+  }
+
+  .VPHero .container {
+    gap: 40px;
+  }
+}
+
+@media (max-width: 959px) {
+  .VPHero .image {
+    margin-top: 0;
+    margin-bottom: 32px;
+  }
+
+  .VPHero .image-container {
+    width: min(100% - 48px, 560px);
+    height: auto;
+  }
+}
+
+.vp-doc h1 .heading-icon {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.4em;
+  vertical-align: -0.1em;
+}
+
+.vp-doc img.doc-screenshot {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+}
