@@ -4,9 +4,11 @@ export const startDaemon = ({
   runTick,
   log,
   intervalMs = TICK_INTERVAL_MS,
+  disabled = false,
   setTimer = setTimeout,
   clearTimer = clearTimeout
 }) => {
+  if (disabled) return { stop: async () => {} }
   let timer = null
   let stopped = false
   let inFlight = Promise.resolve()

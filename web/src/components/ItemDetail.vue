@@ -80,6 +80,7 @@ const tuneError = ref(null)
 const statsKey = ref(0)
 const botCheckSites = ref([])
 const siteLinks = ref({})
+const otherLinks = ref({})
 let pollTimer = null
 
 const isRunning = computed(() => runs.value.some((run) => run.status === 'running'))
@@ -414,12 +415,15 @@ const poll = async () => {
   await refresh().catch(() => null)
 }
 
+const linksByName = (rows) => Object.fromEntries(rows
+  .filter(({ url }) => url)
+  .map(({ name, url, urlKind }) => [name, { url, urlKind }]))
+
 const keepBotChecks = (stats) => {
   const siteRows = (stats?.sites ?? []).filter(({ kind }) => kind === 'site')
   botCheckSites.value = siteRows.filter(({ botCheck }) => botCheck).map(({ name }) => name)
-  siteLinks.value = Object.fromEntries(siteRows
-    .filter(({ url }) => url)
-    .map(({ name, url, urlKind }) => [name, { url, urlKind }]))
+  siteLinks.value = linksByName(siteRows)
+  otherLinks.value = linksByName((stats?.sites ?? []).filter(({ kind }) => kind === 'other'))
 }
 
 const SECTION_IDS = { sources: 'item-sources' }
@@ -663,6 +667,7 @@ watch(() => props.itemId, load)
             :sources="sources"
             :bot-check-sites="botCheckSites"
             :site-links="siteLinks"
+            :other-links="otherLinks"
             @tune="requestTune"
           />
         </FoldSection>

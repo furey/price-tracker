@@ -38,7 +38,13 @@ export const au = {
     { names: ['MyDeal'], hosts: ['mydeal.com.au'] },
     { names: ['Qantas Marketplace'], hosts: ['marketplace.qantas.com'] },
     { names: ['Kärcher', 'Karcher'], hosts: ['kaercher.com', 'karcher.com.au'] },
-    { names: ['OzBargain'], hosts: ['ozbargain.com.au'] }
+    { names: ['OzBargain'], hosts: ['ozbargain.com.au'] },
+    { names: ['BuyWisely'], hosts: ['buywisely.com.au'] },
+    { names: ['PriceHipster'], hosts: ['pricehipster.com'] },
+    { names: ['Getprice'], hosts: ['getprice.com.au'] },
+    { names: ['ShopBot'], hosts: ['shopbot.com.au'] },
+    { names: ['StaticICE'], hosts: ['staticice.com.au'] },
+    { names: ['PriceMe'], hosts: ['priceme.com.au'] }
   ],
   memberships: {
     defaults: ['eBay Plus'],

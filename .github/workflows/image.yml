@@ -68,6 +68,7 @@ jobs:
         run: |
           docker run -d --name smoke -p 4280:4280 \
             -e HOST=0.0.0.0 \
+            -e DISABLE_SCHEDULER=1 \
             -e APP_PASSWORD=smoke-test-password \
             -e SESSION_SECRET=smoke-test-secret-0123456789abcdef0123456789abcdef \
             price-tracker:test

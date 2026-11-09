@@ -109,6 +109,7 @@ const emptyRow = ({ key, name, kind, url = null }) => ({
   rejected: 0,
   eligible: 0,
   eligibleUrls: [],
+  listingHome: null,
   qualifying: 0,
   alerts: 0,
   lastUseful: null,
@@ -137,6 +138,7 @@ const addSourceRun = ({ item, run, rowFor, siteOf, known, region }) => {
       name: listing.retailer, knownRetailers: known
     }))
     row.found += 1
+    row.listingHome ??= originUrl(listing.url)
     if (listing.category === 'reject' || listing.tuned) row.rejected += 1
   })
   usefulListings({ item, listings, region }).forEach((listing) => {
@@ -241,13 +243,19 @@ const withState = ({ row, entry, offState = null }) => {
   return { ...row, state, stateSince: entry.at ?? null }
 }
 
-const finishRow = ({ row, region }) => {
-  const home = retailerHomeUrl({ name: row.name, region })
+const finishRow = ({ row: rawRow, region }) => {
+  const { listingHome, ...row } = rawRow
+  const home = retailerHomeUrl({ name: row.name, region }) ?? listingHome
   const recent = row.recent.slice(-RECENT_STATUS_LIMIT).reverse()
     .map((entry) => entry.url || !home ? entry : { ...entry, url: home, urlKind: HOME_LINK })
   const url = recent.find((entry) => entry.urlKind === PAGE_LINK)?.url ?? row.url
   if (url) return { ...row, url, urlKind: PAGE_LINK, recent }
   return { ...row, url: home, urlKind: home ? HOME_LINK : null, recent }
+}
+
+const originUrl = (url) => {
+  const safe = linkUrl(url)
+  return safe ? linkUrl(`${new URL(safe).origin}/`) : null
 }
 
 const siteResolver = ({ sites, known }) => {

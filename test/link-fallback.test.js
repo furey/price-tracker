@@ -73,3 +73,19 @@ test('retailerHomeUrl matches names the way listing trust does', () => {
   assert.equal(retailerHomeUrl({ name: 'Nowhere Emporium' }), null)
   assert.equal(retailerHomeUrl({ name: '' }), null)
 })
+
+test('an unlisted retailer links to the home page of its own listings in the same run', () => {
+  const listing = {
+    retailer: 'Nowhere Emporium', category: 'base', price: 10, effectivePrice: 10,
+    url: 'https://www.nowhere.example/p/springfree?x=1'
+  }
+  const withListing = {
+    ...run({ id: 1, sources: [blocked('Nowhere Emporium', null)] }),
+    research: { sources: [blocked('Nowhere Emporium', null)], listings: [listing] }
+  }
+  const row = rowNamed({ rows: rowsFor([withListing]), name: 'Nowhere Emporium' })
+  assert.deepEqual([row.url, row.urlKind], ['https://www.nowhere.example/', 'home'])
+  assert.deepEqual([row.recent[0].url, row.recent[0].urlKind],
+    ['https://www.nowhere.example/', 'home'])
+  assert.equal('listingHome' in row, false)
+})

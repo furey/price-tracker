@@ -79,3 +79,15 @@ test('stop waits for a tick in flight and schedules nothing after it', async () 
   await stopped
   assert.equal(timers.scheduled.length, 0)
 })
+
+test('runs no tick and schedules no timer when disabled', async () => {
+  const timers = fakeTimers()
+  let ticks = 0
+  const daemon = startDaemon({
+    runTick: async () => { ticks += 1 }, log: () => {}, disabled: true, ...timers
+  })
+  await settle()
+  await daemon.stop()
+  assert.equal(ticks, 0)
+  assert.equal(timers.scheduled.length, 0)
+})

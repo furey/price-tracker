@@ -84,6 +84,7 @@ These variables are not settings. Set them in the environment or in `.env`.
 | `CLAUDE_BIN`          | `claude`                 | Path to the Claude Code binary. `install` sets it from `command -v claude`.                                                              |
 | `CLAUDE_CONFIG_DIR`   | none                     | Claude Code config folder, passed to `claude` only when no Claude login token is set.                                                    |
 | `DB_PATH`             | `state/price-tracker.db` | Path to the SQLite database.                                                                                                             |
+| `DISABLE_SCHEDULER` | none | `1` stops the daemon from running scheduled checks and the startup Claude usage check. The server and drafts still run. |
 
 The server refuses to start when `HOST` is not a loopback address (`127.0.0.1`, `localhost`, or `::1`), `APP_PASSWORD` is unset, and `ALLOW_NO_AUTH` is not `1`. It also refuses to start when `SESSION_SECRET` is shorter than `32` characters, or missing while `APP_PASSWORD` is set.
 

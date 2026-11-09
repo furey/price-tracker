@@ -170,8 +170,11 @@ const commands = {
     const { address, port } = server.address()
     log(`serving on http://${address}:${port} (database ${DB_PATH})`)
     worker.start()
-    startupProbe({ db, log }).catch((error) => log(`Claude usage probe failed: ${error.message}`))
-    const scheduler = startDaemon({ runTick: () => runTick(db), log })
+    const schedulerDisabled = process.env.DISABLE_SCHEDULER === '1'
+    if (!schedulerDisabled) {
+      startupProbe({ db, log }).catch((error) => log(`Claude usage probe failed: ${error.message}`))
+    }
+    const scheduler = startDaemon({ runTick: () => runTick(db), log, disabled: schedulerDisabled })
     onShutdown(async () => {
       log('shutting down')
       server.close()

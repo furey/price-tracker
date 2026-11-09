@@ -10,7 +10,8 @@ const props = defineProps({
   item: { type: Object, required: true },
   sources: { type: Array, default: () => [] },
   botCheckSites: { type: Array, default: () => [] },
-  siteLinks: { type: Object, default: () => ({}) }
+  siteLinks: { type: Object, default: () => ({}) },
+  otherLinks: { type: Object, default: () => ({}) }
 })
 
 const emit = defineEmits(['tune'])
@@ -80,6 +81,12 @@ const siteLink = (site) => site.source?.url
   ? { url: site.source.url, urlKind: 'page' }
   : props.siteLinks[site.name] ?? { url: null, urlKind: null }
 
+const otherLink = (source) => {
+  if (source.url) return { url: source.url, urlKind: 'page' }
+  const name = canonicalRetailer({ name: source.name, knownRetailers: siteNames.value })
+  return props.otherLinks[name] ?? { url: null, urlKind: null }
+}
+
 const statusOf = (source) => (isBotCheck(source) ? BOT_CHECK : source.status)
 
 const hostPath = (url) => {
@@ -132,7 +139,12 @@ const hostPath = (url) => {
       <ul class="rows card">
         <li v-for="source in otherSources" :key="source.name">
           <div class="row-main">
-            <SourceLink class="name" :name="source.name" :url="source.url" />
+            <SourceLink
+              class="name"
+              :name="source.name"
+              :url="otherLink(source).url"
+              :url-kind="otherLink(source).urlKind"
+            />
             <StatusPill :status="statusOf(source)" compact />
           </div>
           <p v-if="source.note" class="note muted">{{ source.note }}</p>
