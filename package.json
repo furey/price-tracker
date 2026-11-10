@@ -1,6 +1,6 @@
 {
   "name": "price-tracker",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Self-hosted deal tracker: describe what you want to buy, and get notified when a shop meets your price.",
   "license": "MIT",
   "author": "James Furey",
