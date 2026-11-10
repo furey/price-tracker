@@ -10,15 +10,15 @@ Run each command from the project root as `node src/cli.js <command>`. In Docker
 
 ## Checks
 
-| Command                   | Does                                                                                                                                             |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `tick`                    | runs every item that is due, one at a time; the LaunchAgent and the daemon call this                                                             |
-| `run <id>`                | runs one AI research check now and prints the decision and the delivery result                                                                   |
-| `run <id> --dry-run`      | runs the research and prints the JSON, the decision, and the messages it would send; stores only the run row                                     |
-| `run <id> --direct`       | runs only the free direct checks; combine with `--dry-run` to preview                                                                            |
-| `research <id>`           | prints the research JSON only; no decision, no alert, no history                                                                                 |
-| `record <id> <file.json>` | imports hand-checked prices in the [research reply](/reference/research-contract#the-reply) shape as a `manual` run; never sends an alert        |
-| `sweep`                   | prints a Claude in Chrome prompt that checks every blocked page of the active items; see [Chrome sweep](/guide/chrome-observations#chrome-sweep) |
+| Command                                         | Does                                                                                                                                                                                                                    |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tick`                                          | runs every item that is due, one at a time; the LaunchAgent and the daemon call this                                                                                                                                    |
+| `run <id>`                                      | runs one AI research check now and prints the decision and the delivery result                                                                                                                                          |
+| `run <id> --dry-run`                            | runs the research and prints the JSON, the decision, and the messages it would send; stores only the run row                                                                                                            |
+| `run <id> --direct`                             | runs only the free direct checks; combine with `--dry-run` to preview                                                                                                                                                   |
+| `research <id>`                                 | prints the research JSON only; no decision, no alert, no history                                                                                                                                                        |
+| `record <id> <file.json> [--screenshots <dir>]` | imports hand-checked prices in the [research reply](/reference/research-contract#the-reply) shape as a `manual` run; never sends an alert. `--screenshots` attaches the PNG, JPEG, and WebP files in `<dir>` to the run |
+| `sweep [--json]`                                | prints a Claude in Chrome prompt that checks every blocked page of the active items, or with `--json` the list of pages; see [Chrome sweep](/guide/chrome-observations#chrome-sweep)                                    |
 
 `run` and `tick` share `state/tick.lock`. When one holds it, the other stops with a message. `run` refuses an archived item, and `run --direct` refuses an item with no direct entries.
 

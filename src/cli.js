@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import { mkdirSync } from 'node:fs'
-import { readFile, rm } from 'node:fs/promises'
+import { readdir, readFile, rm } from 'node:fs/promises'
+import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { DB_PATH, loadEnv } from './config.js'
 import {
-  lastAlert, lastRun, lastSuccessAt, historyRows, normaliseStoredRetailers, openDb
+  getRun, lastAlert, lastRun, lastSuccessAt, historyRows, normaliseStoredRetailers, openDb
 } from './db.js'
 import { lowestPerRetailerPerDay } from './decide.js'
 import { startDaemon } from './daemon.js'
@@ -20,9 +21,15 @@ import {
 } from './runner.js'
 import { activeRegion } from './region.js'
 import { nextSlot } from './schedule.js'
-import { deliveryFrom, resolveSettings, rotateAppTopic } from './settings.js'
+import {
+  deliveryFrom, resolveSettings, rotateAppTopic, screenshotCapMb
+} from './settings.js'
 import { startServer } from './server.js'
 import { sweepPrompt } from './sweep.js'
+import { SCREENSHOT_DIR, pruneScreenshots, saveScreenshot } from './screenshot-store.js'
+import {
+  MAX_SCREENSHOTS_PER_RUN, MAX_SCREENSHOT_BYTES, capBytesFromMb, detectImageType
+} from './screenshots.js'
 import { formatPrice } from './text.js'
 import {
   exportConfig, pauseItem, pinSeeds, requireItem, resumeItem, rotateTopic, seedItems,
@@ -53,14 +60,16 @@ const commands = {
     else printRunSummary({ result, region })
   },
 
-  record: async ({ args }) => {
+  record: async ({ args, values }) => {
     const db = openStore()
     const record = requireItem({ db, id: requireArg(args, 'item id') })
     const data = JSON.parse(await readFile(requireArg(args.slice(1), 'JSON file'), 'utf8'))
+    const shots = values.screenshots ? await readScreenshots(values.screenshots) : []
     const result = await recordObservation({
       item: record.config, itemVersion: record.version, data, db, deps: { log }
     })
     log(`${record.id} recorded run ${result.runId}`)
+    if (shots.length) attachScreenshots({ db, runId: result.runId, shots })
     printDecision({ decision: result.decision, region: activeRegion({ db }) })
   },
 
@@ -93,9 +102,10 @@ const commands = {
     printHistoryTable({ rows: lowestPerRetailerPerDay(rows, { tz }), region })
   },
 
-  sweep: async () => {
+  sweep: async ({ values }) => {
     const db = openStore()
     const items = sweepItems({ db, records: itemRecords({ db }), now: new Date() })
+    if (values.json) return console.log(JSON.stringify({ items }, null, 2))
     if (items.length === 0) return console.log('No blocked pages to check in Chrome')
     console.log(sweepPrompt({ items, labels: activeRegion({ db }).deliveryLabels }))
   },
@@ -233,6 +243,37 @@ const onShutdown = (cleanup) => {
   process.on('SIGINT', handle)
 }
 
+const readScreenshots = async (dir) => {
+  const names = (await readdir(dir)).filter((name) => SCREENSHOT_FILE.test(name)).sort()
+  const shots = await Promise.all(names.map(async (name) => {
+    const bytes = await readFile(join(dir, name))
+    return { name, bytes, kind: detectImageType(bytes) }
+  }))
+  const problems = shots.flatMap(({ name, bytes, kind }) => [
+    ...(kind ? [] : [`${name}: not a PNG, JPEG, or WebP image`]),
+    ...(bytes.length > MAX_SCREENSHOT_BYTES ? [`${name}: over 2 MB`] : [])
+  ])
+  if (shots.length > MAX_SCREENSHOTS_PER_RUN) {
+    problems.push(`${shots.length} screenshots: the limit is ${MAX_SCREENSHOTS_PER_RUN} per run`)
+  }
+  if (problems.length) throw new Error(`Screenshots not recorded: ${problems.join('; ')}`)
+  return shots
+}
+
+const attachScreenshots = ({ db, runId, shots }) => {
+  const run = getRun({ db, id: runId })
+  const now = new Date()
+  shots.forEach(({ bytes, kind }) => saveScreenshot({
+    db, dir: SCREENSHOT_DIR, run, bytes, kind, now
+  }))
+  const pruned = pruneScreenshots({
+    db, dir: SCREENSHOT_DIR, capBytes: capBytesFromMb(screenshotCapMb({ db }))
+  })
+  log(`run ${runId}: ${shots.length} screenshots saved, ${pruned.length} old ones pruned`)
+}
+
+const SCREENSHOT_FILE = /\.(png|jpe?g|webp)$/i
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const main = async () => {
@@ -243,7 +284,9 @@ const main = async () => {
       'dry-run': { type: 'boolean' },
       direct: { type: 'boolean' },
       days: { type: 'string' },
-      until: { type: 'string' }
+      until: { type: 'string' },
+      screenshots: { type: 'string' },
+      json: { type: 'boolean' }
     }
   })
   const [name, ...args] = positionals

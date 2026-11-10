@@ -14,10 +14,5 @@ export const shrinkScreenshot = async (file) => {
   return encode({ canvas, type: 'image/jpeg' })
 }
 
-export const imageFiles = (items) => [...(items ?? [])]
-  .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
-  .map((item) => item.getAsFile())
-  .filter(Boolean)
-
 const encode = ({ canvas, type }) =>
   new Promise((resolve) => canvas.toBlob(resolve, type, SCREENSHOT_QUALITY))

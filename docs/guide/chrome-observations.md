@@ -60,11 +60,18 @@ Claude ends its reply with one JSON block per item, each with an `itemId`. **Rec
 
 ## Screenshots
 
-You can keep screenshots of the pages you checked with a Chrome check. They show what the page said at the time.
+A Chrome check can keep screenshots of the pages it read. They show what the page said at the time.
 
-1. Record the results as above.
-2. Press **Add screenshots** on the line of the item, and pick one or more images.
-3. Or copy an image, then paste it with `Ctrl+V` or `Cmd+V` while the sheet is open. The image goes to the last item you recorded, or to the item where you pressed **Paste here**.
+Claude in Chrome cannot save files, so a sweep run from the side panel records prices only. To capture screenshots as well, run the sweep with an agent that drives your Chrome and saves screenshots to disk, such as Claude Code with the Claude in Chrome tools:
+
+1. Get the blocked pages as JSON with `node src/cli.js sweep --json`.
+2. Check each page in Chrome under the same rules as the prompt, and save a screenshot of each page.
+3. Write the results for each item as a JSON file, and put its screenshots in one folder.
+4. Record each item with `node src/cli.js record <id> <file.json> --screenshots <folder>`.
+
+The `record` command takes PNG, JPEG, and WebP files from the folder, up to `2 MB` each and `20` per check. When a screenshot breaks a limit, the command records nothing and names the file.
+
+To add screenshots by hand after a sweep from the side panel, press **Add screenshots** on the line of the item in **Record results**, and pick one or more images.
 
 The browser shrinks each image to `1600` px wide and saves it as WebP (or JPEG when the browser cannot make WebP). Each line shows the progress of each image, and small previews of the saved images.
 

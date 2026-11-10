@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref, useId } from 'vue'
 import { parseSweepReply, sweepPrompt } from '../../../src/sweep.js'
 import { getSweep, recordObservations, uploadScreenshot } from '../api.js'
 import { copyText } from '../clipboard.js'
-import { imageFiles, shrinkScreenshot } from '../screenshotImage.js'
+import { shrinkScreenshot } from '../screenshotImage.js'
 import AppIcon from './AppIcon.vue'
 import ModalSheet from './ModalSheet.vue'
 import ScreenshotThumbs from './ScreenshotThumbs.vue'
@@ -17,7 +17,6 @@ const recording = ref(false)
 const reply = ref('')
 const busy = ref(false)
 const outcomes = ref([])
-const pasteRunId = ref(null)
 const headingId = useId()
 const replyId = useId()
 let resetTimer = null
@@ -51,27 +50,12 @@ const copyPrompt = async () => {
 const openRecording = () => {
   reply.value = ''
   outcomes.value = []
-  pasteRunId.value = null
   recording.value = true
-  document.addEventListener('paste', onPaste)
 }
 
 const closeRecording = async () => {
   recording.value = false
-  document.removeEventListener('paste', onPaste)
   if (outcomes.value.some(({ ok }) => ok)) await load()
-}
-
-const recordedRuns = computed(() => outcomes.value.filter(({ runId }) => runId))
-
-const pasteTarget = computed(() => recordedRuns.value
-  .find(({ runId }) => runId === pasteRunId.value) ?? recordedRuns.value.at(-1) ?? null)
-
-const onPaste = (event) => {
-  const files = imageFiles(event.clipboardData?.items)
-  if (!files.length || !pasteTarget.value) return
-  event.preventDefault()
-  addScreenshots({ outcome: pasteTarget.value, files })
 }
 
 const onPick = ({ outcome, event }) => {
@@ -81,7 +65,6 @@ const onPick = ({ outcome, event }) => {
 }
 
 const addScreenshots = async ({ outcome, files }) => {
-  pasteRunId.value = outcome.runId
   for (const file of files) await uploadOne({ outcome, file })
 }
 
@@ -123,10 +106,7 @@ const recordOne = async ({ itemId, data }) => {
 }
 
 onMounted(load)
-onUnmounted(() => {
-  clearTimeout(resetTimer)
-  document.removeEventListener('paste', onPaste)
-})
+onUnmounted(() => clearTimeout(resetTimer))
 </script>
 
 <template>
@@ -176,18 +156,10 @@ onUnmounted(() => {
                 @change="onPick({ outcome, event: $event })"
               />
             </label>
-            <button
-              class="btn secondary small"
-              type="button"
-              :aria-pressed="pasteTarget?.runId === outcome.runId ? 'true' : 'false'"
-              @click="pasteRunId = outcome.runId"
-            >
-              {{ pasteTarget?.runId === outcome.runId ? 'Pasted images go here' : 'Paste here' }}
-            </button>
           </div>
           <ul v-if="outcome.uploads.length" class="uploads">
             <li v-for="upload in outcome.uploads" :key="upload.key" :class="{ bad: upload.failed }">
-              {{ upload.name || 'Pasted image' }}: {{ upload.state }}
+              {{ upload.name || 'Image' }}: {{ upload.state }}
             </li>
           </ul>
           <ScreenshotThumbs
@@ -197,10 +169,6 @@ onUnmounted(() => {
         </div>
       </li>
     </ul>
-    <p v-if="recordedRuns.length" class="muted paste-hint">
-      Paste an image with Ctrl+V or Cmd+V to add it to the chosen check. Images are shrunk to
-      1600 px wide before upload.
-    </p>
     <template #actions>
       <button class="btn secondary" type="button" @click="closeRecording">Close</button>
       <button class="btn" type="button" :disabled="busy || !reply.trim()" @click="record">
@@ -293,12 +261,6 @@ onUnmounted(() => {
 
 .uploads .bad {
   color: var(--bad);
-}
-
-.paste-hint {
-  margin: var(--space-2) 0 0;
-  font-size: var(--text-caption);
-  text-wrap: pretty;
 }
 
 .outcomes .good {
