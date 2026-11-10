@@ -20,6 +20,7 @@ export const validateItem = (item, fileName = null) => {
     ...validateHeartbeat(item),
     ...validateDeadline(item),
     ...validateAccept(item),
+    ...validateUnit(item),
     ...validateResearchOptions(item),
     ...validateTuning(item)
   ]
@@ -277,6 +278,14 @@ const validateHeartbeat = (item) => {
     : ['heartbeat.monthly: expected true or false']
 }
 
+const validateUnit = (item) => {
+  if (item.unit === undefined || item.unit === null) return []
+  const name = item.unit?.name
+  const valid = isObject(item.unit) && typeof name === 'string'
+    && name.trim().length > 0 && name.length <= 30
+  return valid ? [] : ['unit.name: expected a short name such as "nappy", up to 30 characters']
+}
+
 const validateAccept = (item) => {
   const { accept } = item
   if (accept === undefined) return []
@@ -331,7 +340,7 @@ const validateResearchOptions = (item) => {
 
 const CATEGORY_ID = /^[a-z0-9][a-z0-9-]*$/
 const NTFY_TOPIC = /^[A-Za-z0-9_-]{1,64}$/
-const RULE_PRICE_KEYS = ['maxPrice', 'maxPriceIfClearance', 'rrp']
+const RULE_PRICE_KEYS = ['maxPrice', 'maxPriceIfClearance', 'rrp', 'maxPricePerUnit']
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
 
 const isDateString = (value) =>

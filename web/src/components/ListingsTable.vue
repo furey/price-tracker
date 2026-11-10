@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { isCategoryMuted, mutedReason, neverRuleFor } from '../../../src/tuning.js'
+import { pricePerUnit } from '../../../src/unit-price.js'
 import { formatMoney } from '../format.js'
 import { useSort } from '../useSort.js'
 import SortHeader from './SortHeader.vue'
@@ -14,6 +15,8 @@ const props = defineProps({
 const emit = defineEmits(['tune'])
 
 const showMuted = defineModel('showMuted', { type: Boolean, default: false })
+
+const unitName = computed(() => props.item?.unit?.name ?? null)
 
 const MUTED_LABELS = { category: 'Muted model', never: 'Hidden product' }
 
@@ -175,6 +178,9 @@ const hostOf = (url) => {
             {{ formatMoney(listing.effectivePrice ?? listing.price) }}
             <small v-if="listing.deliveryCost" class="muted was">
               +{{ formatMoney(listing.deliveryCost) }} delivery
+            </small>
+            <small v-if="unitName && pricePerUnit(listing) !== null" class="muted was">
+              {{ formatMoney(pricePerUnit(listing)) }} per {{ unitName }}
             </small>
           </td>
           <td>

@@ -42,6 +42,7 @@ export const buildPrompt = ({
     introSection({ today, region }),
     productSection(item),
     categoriesSection(item),
+    unitSection(item),
     notWantedSection(item),
     kitsSection({ item, region }),
     rulesSection({ rules, ref, today, region }),
@@ -360,6 +361,17 @@ const REFURBISHED_RULE = {
     'Put every such unit in category "refurbished", never in another category, and give the ' +
     'refurbisher and the warranty in notes. Reject used, open-box, and refurbished units from ' +
     'marketplace third-party sellers.'
+}
+
+const unitSection = (item) => {
+  const name = item.unit?.name
+  if (!name) return null
+  return [
+    'UNITS',
+    `Compare listings by price per ${name}. Add "unitCount" to every listing: the number of ` +
+      `${name} units the listing sells (a pack of 54 gives 54, two packs of 54 give 108). ` +
+      'Use null when the page does not say. Never guess a count.'
+  ].join('\n')
 }
 
 const ruleNumbers = (rules) => {

@@ -62,6 +62,7 @@ Two more fields apply to the whole item:
 
 - **Repeat alert needs a drop of**: a second alert for the same retailer and category needs at least this much off the last alerted price. See [Repeat alerts](/guide/alerts#repeat-alerts).
 - **Monthly heartbeat**: sends a "still tracking" message once a month with the lowest price.
+- **Compare price per**: a unit name, such as "nappy", for things sold in packs of different sizes. The AI then counts the units in each listing, and each category gets an **Or this per nappy** alert price. Clear it to stop comparing per unit.
 - **Need by**, **Days to allow for delivery**, and **Last-chance alert, days before that**: set when the one last-chance alert goes. Clear **Need by** for no deadline. The schedules still set when checks stop. See [Last chance](/guide/alerts#alert-kinds-last-chance).
 
 ## What to look for

@@ -20,6 +20,22 @@ const RULE_FIELDS = [
   { key: 'minPctBelowRrp', label: 'Or this % below RRP', unit: '%' }
 ]
 
+const unitName = () => props.config.unit?.name ?? ''
+
+const ruleFields = () => (unitName()
+  ? [...RULE_FIELDS, { key: 'maxPricePerUnit', label: `Or this per ${unitName()}`, unit: '$' }]
+  : RULE_FIELDS)
+
+const setUnit = (value) => {
+  const name = value.trim()
+  if (name) {
+    props.config.unit = { name }
+    return
+  }
+  delete props.config.unit
+  Object.values(props.config.rules ?? {}).forEach((rule) => delete rule.maxPricePerUnit)
+}
+
 const ruleValue = ({ id, key }) => props.config.rules?.[id]?.[key] ?? ''
 
 const setRule = ({ id, key, value }) => {
@@ -66,6 +82,21 @@ const fieldId = ({ id, key }) => `rule-${id}-${key}`
       Categories are in preference order. When two deals qualify, the alert names the one higher
       up. An alert fires when a price is at or below the alert price, or far enough below RRP.
     </p>
+    <div class="field">
+      <label for="edit-unit">Compare price per (optional)</label>
+      <input
+        id="edit-unit"
+        type="text"
+        maxlength="30"
+        placeholder="nappy, capsule, tablet"
+        :value="config.unit?.name ?? ''"
+        :aria-invalid="invalid('unit.name')"
+        @change="setUnit($event.target.value)"
+      />
+      <p class="hint">For things sold in packs of different sizes. The AI counts the units in
+        each listing, and each category gets a per-unit alert price.</p>
+      <FieldError path="unit.name" />
+    </div>
     <ol class="row-list">
       <li v-for="(category, index) in config.categories" :key="category.id" class="row-item">
         <div class="row-head">
@@ -104,7 +135,7 @@ const fieldId = ({ id, key }) => `rule-${id}-${key}`
           <span v-else class="muted">No in-stock price seen in the last 90 days.</span>
         </p>
         <div class="rule-grid">
-          <div v-for="field in RULE_FIELDS" :key="field.key" class="field">
+          <div v-for="field in ruleFields()" :key="field.key" class="field">
             <label :for="fieldId({ id: category.id, key: field.key })">{{ field.label }}</label>
             <div class="unit-input" :data-unit="field.unit">
               <input

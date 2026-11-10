@@ -246,6 +246,10 @@ const requestSection = ({ input, delivery, memberships, region }) => [
   ...(input.refurbished
     ? ['Refurbished OK: yes. The app adds a "refurbished" category itself; do not add one.']
     : []),
+  ...(input.unit
+    ? [`Compare price per ${input.unit}: yes. Add "maxPricePerUnit" to each rule, a good ` +
+      `price for one ${input.unit} from the prices per ${input.unit} you found.`]
+    : []),
   `Delivery to: ${describePlace({ delivery, region })}`,
   `Memberships the buyer holds: ${memberships?.length ? memberships.join(', ') : 'none'}`
 ].join('\n')

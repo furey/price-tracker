@@ -66,6 +66,7 @@ const readListing = ({ listing, path, categoryIds, partIds, errors, maxPrice }) 
   )
   const price = (name) => readPrice({ value: listing[name], path: field(name), errors, maxPrice })
   const flag = (name) => readBoolean({ value: listing[name], path: field(name), errors })
+  const unitCount = readUnitCount({ value: listing.unitCount, path: field('unitCount'), errors })
   return {
     retailer: required('retailer'),
     title: required('title'),
@@ -88,9 +89,19 @@ const readListing = ({ listing, path, categoryIds, partIds, errors, maxPrice }) 
     verified: flag('verified'),
     url: readUrl({ value: listing.url, path: field('url'), errors }),
     evidence: text('evidence'),
-    notes: text('notes')
+    notes: text('notes'),
+    ...(unitCount === null ? {} : { unitCount })
   }
 }
+
+const readUnitCount = ({ value, path, errors }) => {
+  if (value === null || value === undefined) return null
+  const isCount = typeof value === 'number' && Number.isFinite(value)
+    && value > 0 && value <= MAX_UNIT_COUNT
+  return isCount ? value : fail({ path, expected: `number from 0 to ${MAX_UNIT_COUNT}`, errors })
+}
+
+const MAX_UNIT_COUNT = 100_000
 
 const readPart = ({ value, path, partIds, errors }) => {
   if (value === null || value === undefined || value === '') return null

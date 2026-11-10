@@ -46,6 +46,7 @@ A save must name the version it started from (`baseVersion`). If another save ha
 | `sources`         | yes                        | see [Sources](#sources)                                                                                                                               |
 | `dedupe`          | no                         | `{ minDrop }`, a number of `0` or more; see [Dedupe](#dedupe)                                                                                         |
 | `heartbeat`       | no                         | `{ monthly }`, `true` or `false`                                                                                                                      |
+| `unit`            | no                         | `{ name }`, a short unit name such as `nappy`, up to `30` characters; the research then counts units per listing                                      |
 | `accept`          | no                         | `{ refurbished }`, `true` or `false`; `true` needs a `refurbished` category; see [Research rules](/reference/research-contract#prompt-research-rules) |
 | `deadline`        | no                         | `{ needBy, deliveryDays, lastChanceDays }`; see [Deadline](#deadline)                                                                                 |
 | `research`        | no                         | see [Research options](#research-options)                                                                                                             |
@@ -57,12 +58,13 @@ A category `id` uses lowercase letters, digits, and hyphens, and must be unique.
 
 `rules` maps a category id to its price limits. Every key must be a category id.
 
-| Field                 | Rule                                                                            |
-| --------------------- | ------------------------------------------------------------------------------- |
-| `maxPrice`            | positive number or `null`; the price cap in the install currency                |
-| `maxPriceIfClearance` | positive number or `null`; a lower cap for clearance listings                   |
-| `rrp`                 | positive number or `null`; the recommended retail price in the install currency |
-| `minPctBelowRrp`      | number above `0` and below `100`, or `null`                                     |
+| Field                 | Rule                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| `maxPrice`            | positive number or `null`; the price cap in the install currency                      |
+| `maxPriceIfClearance` | positive number or `null`; a lower cap for clearance listings                         |
+| `rrp`                 | positive number or `null`; the recommended retail price in the install currency       |
+| `minPctBelowRrp`      | number above `0` and below `100`, or `null`                                           |
+| `maxPricePerUnit`     | positive number or `null`; a cap on the price per unit, used when the item has `unit` |
 
 [Deciding and alerting](/reference/decisions#qualifying) shows how the code applies them.
 

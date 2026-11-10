@@ -33,18 +33,19 @@ The app reads the output stream line by line. It shows each search and page in t
 
 The app builds the prompt from the item in this order. A section with no content is left out.
 
-| Section       | Content                                                                                                                                    |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Intro         | Today's date in the time zone of the install. Claude collects facts; a separate program decides.                                           |
-| `PRODUCT`     | The `product` text of the item, as written.                                                                                                |
-| `CATEGORIES`  | Each active category id and description, `accessory` when the item has kits, and `reject`. Muted categories are listed as "do not target". |
-| `NOT WANTED`  | The `never` rules from tuning, as products to report as rejects.                                                                           |
-| `KITS`        | Each kit and its parts, and the rules for accessory listings.                                                                              |
-| `RULES`       | The fixed research rules below.                                                                                                            |
-| `OUTPUT`      | The JSON shape and the meaning of each field.                                                                                              |
-| `DELIVERY`    | The delivery suburb and postcode (city and ZIP code for `us`), when set.                                                                   |
-| `MEMBERSHIPS` | The memberships you hold, and how to apply member prices.                                                                                  |
-| `SOURCES`     | Sites (minus muted ones and weekly ones not due), search phrases (minus muted ones), and the seasonal searches active today.               |
+| Section       | Content                                                                                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Intro         | Today's date in the time zone of the install. Claude collects facts; a separate program decides.                                                       |
+| `PRODUCT`     | The `product` text of the item, as written.                                                                                                            |
+| `CATEGORIES`  | Each active category id and description, `accessory` when the item has kits, and `reject`. Muted categories are listed as "do not target".             |
+| `UNITS`       | Only for an item with `unit.name`: asks for `unitCount` on every listing, the number of units the listing sells, or `null` when the page does not say. |
+| `NOT WANTED`  | The `never` rules from tuning, as products to report as rejects.                                                                                       |
+| `KITS`        | Each kit and its parts, and the rules for accessory listings.                                                                                          |
+| `RULES`       | The fixed research rules below.                                                                                                                        |
+| `OUTPUT`      | The JSON shape and the meaning of each field.                                                                                                          |
+| `DELIVERY`    | The delivery suburb and postcode (city and ZIP code for `us`), when set.                                                                               |
+| `MEMBERSHIPS` | The memberships you hold, and how to apply member prices.                                                                                              |
+| `SOURCES`     | Sites (minus muted ones and weekly ones not due), search phrases (minus muted ones), and the seasonal searches active today.                           |
 
 The prompt ends with: return the JSON in one final ` ```json ` block and write nothing after it.
 
@@ -122,19 +123,20 @@ An item with `accept.refurbished` set to `true` gets one more rule after the mar
 }
 ```
 
-| Field                                 | Type                                                              |
-| ------------------------------------- | ----------------------------------------------------------------- |
-| `checkedAt`                           | ISO 8601 string                                                   |
-| `sources[].status`                    | `ok`, `blocked`, `error`, or `not_found`                          |
-| `sources[].url`                       | optional; the page Claude opened or tried for that source         |
-| `listings[].category`                 | a category id of the item, `accessory` (with `part`), or `reject` |
-| `listings[].part`                     | a kit part id, or `null`                                          |
-| `price`, `wasPrice`, `effectivePrice` | number above `0` and up to `200000`, or `null`                    |
-| `deliveryCost`                        | number from `0` to `200000`, or `null`                            |
-| `isClearance`, `inStock`, `verified`  | boolean                                                           |
-| `url`                                 | a public `http` or `https` URL, or `null`                         |
-| `retailer`, `title`                   | non-empty string                                                  |
-| `rejectReason`, `evidence`, `notes`   | string or `null`                                                  |
+| Field                                 | Type                                                                             |
+| ------------------------------------- | -------------------------------------------------------------------------------- |
+| `checkedAt`                           | ISO 8601 string                                                                  |
+| `sources[].status`                    | `ok`, `blocked`, `error`, or `not_found`                                         |
+| `sources[].url`                       | optional; the page Claude opened or tried for that source                        |
+| `listings[].category`                 | a category id of the item, `accessory` (with `part`), or `reject`                |
+| `listings[].part`                     | a kit part id, or `null`                                                         |
+| `listings[].unitCount`                | optional; a number above `0` and up to `100000`, or `null`; kept only when given |
+| `price`, `wasPrice`, `effectivePrice` | number above `0` and up to `200000`, or `null`                                   |
+| `deliveryCost`                        | number from `0` to `200000`, or `null`                                           |
+| `isClearance`, `inStock`, `verified`  | boolean                                                                          |
+| `url`                                 | a public `http` or `https` URL, or `null`                                        |
+| `retailer`, `title`                   | non-empty string                                                                 |
+| `rejectReason`, `evidence`, `notes`   | string or `null`                                                                 |
 
 A `sources[].url` that is not a public `http` or `https` address is dropped; the run still passes. A free check sets `url` to the product page of its entry. Runs stored before this field have no source `url`; the dashboard then links a site to its configured **URL**, if it has one, and otherwise shows no link.
 

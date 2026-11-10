@@ -76,7 +76,8 @@ CREATE TABLE IF NOT EXISTS listings (
   evidence TEXT,
   source TEXT NOT NULL DEFAULT 'research',
   part TEXT,
-  tuned TEXT
+  tuned TEXT,
+  unit_count REAL
 );
 CREATE INDEX IF NOT EXISTS listings_item_checked ON listings (item_id, checked_at);
 CREATE INDEX IF NOT EXISTS listings_run ON listings (run_id);
@@ -185,6 +186,7 @@ export const openDb = (path = DB_PATH) => {
   migrateRunsSkipped(db)
   migrateListingEvidence(db)
   migrateListingTuned(db)
+  migrateListingUnitCount(db)
   migrateAlertKinds(db)
   migrateVersionSources(db)
   migrateDraftColumns(db)
@@ -232,10 +234,10 @@ export const insertListings = ({
   const statement = db.prepare(`
     INSERT INTO listings (run_id, item_id, checked_at, retailer, title, category, price,
       effective_price, was_price, delivery_cost, currency, is_clearance, in_stock, verified, url,
-      qualifies, reject_reason, notes, evidence, source, part, tuned)
+      qualifies, reject_reason, notes, evidence, source, part, tuned, unit_count)
     VALUES (:runId, :itemId, :checkedAt, :retailer, :title, :category, :price,
       :effectivePrice, :wasPrice, :deliveryCost, :currency, :isClearance, :inStock, :verified,
-      :url, :qualifies, :rejectReason, :notes, :evidence, :source, :part, :tuned)`)
+      :url, :qualifies, :rejectReason, :notes, :evidence, :source, :part, :tuned, :unitCount)`)
   inTransaction(db, () => {
     for (const listing of listings) {
       statement.run({
@@ -260,7 +262,8 @@ export const insertListings = ({
         evidence: listing.evidence ?? null,
         source,
         part: listing.part ?? null,
-        tuned: listing.tuned ?? null
+        tuned: listing.tuned ?? null,
+        unitCount: listing.unitCount ?? null
       })
     }
   })
@@ -648,6 +651,11 @@ const backfillEvidence = (db) => {
 const migrateListingTuned = (db) => {
   const columns = db.prepare('PRAGMA table_info(listings)').all().map(({ name }) => name)
   if (!columns.includes('tuned')) db.exec('ALTER TABLE listings ADD COLUMN tuned TEXT')
+}
+
+const migrateListingUnitCount = (db) => {
+  const columns = db.prepare('PRAGMA table_info(listings)').all().map(({ name }) => name)
+  if (!columns.includes('unit_count')) db.exec('ALTER TABLE listings ADD COLUMN unit_count REAL')
 }
 
 const migrateAlertKinds = (db) => {

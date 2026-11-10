@@ -99,7 +99,7 @@ Each row is one listing from the latest successful run, including the ones the A
 
 - **Retailer**: the retailer, the listing title, the notes, and the reason for a rejection.
 - **Category**: the model the listing belongs to, or `reject`. A label shows **Muted model** or **Hidden product** for a muted listing. **Mute model** mutes the category from this row.
-- **Price** and **After promos**: the listed price (with the was price), and the price after any promotion (with the delivery cost when known).
+- **Price** and **After promos**: the listed price (with the was price), and the price after any promotion (with the delivery cost when known, and the price per unit for an item compared per unit).
 - **Verified**: **Verified** when the price was seen on the product page itself, otherwise **Unverified**.
 - **Qualifies**: **Best deal** for the listing the alert named, **Qualifies** for another listing that met your rules, or **No**. The note under it gives the reason, such as `under $950 cap`.
 

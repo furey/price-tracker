@@ -46,14 +46,15 @@ export const describeChanges = ({ before, after, renames = {} }) => [
 const HANDLED_KEYS = new Set([
   'id', 'name', 'product', 'ntfy', 'schedules', 'directSchedules', 'categories', 'rules',
   'dedupe', 'heartbeat', 'sources', 'direct', 'kits', 'research', 'enabled', 'tuning',
-  'deadline', 'accept'
+  'deadline', 'accept', 'unit'
 ])
 
 const RULE_FIELDS = [
   { key: 'maxPrice', label: 'alert at or below', money: true },
   { key: 'maxPriceIfClearance', label: 'clearance alert at or below', money: true },
   { key: 'rrp', label: 'RRP', money: true },
-  { key: 'minPctBelowRrp', label: '% below RRP', money: false }
+  { key: 'minPctBelowRrp', label: '% below RRP', money: false },
+  { key: 'maxPricePerUnit', label: 'per-unit alert price', money: true }
 ]
 
 const basicChanges = ({ before, after }) => [
@@ -150,6 +151,12 @@ const alertOptionChanges = ({ before, after }) => [
     label: 'Monthly heartbeat',
     from: before.heartbeat?.monthly ? 'On' : 'Off',
     to: after.heartbeat?.monthly ? 'On' : 'Off'
+  }),
+  change({
+    section: 'Alert prices',
+    label: 'Compare price per',
+    from: before.unit?.name ?? 'None',
+    to: after.unit?.name ?? 'None'
   }),
   change({
     section: 'What to look for',

@@ -32,10 +32,11 @@ A missing `effectivePrice` takes the value of `price`. Each [kit](/reference/ite
 
 ## Qualifying
 
-A listing qualifies when its effective price passes either test of the rule for its category:
+A listing qualifies when its effective price passes any test of the rule for its category:
 
 - **Price cap**: effective price at or below `maxPrice`. A clearance listing uses `maxPriceIfClearance` instead, when it is set.
 - **RRP test**: effective price at or below `rrp × (1 − minPctBelowRrp / 100)`. A `null` `rrp` or `minPctBelowRrp` skips this test.
+- **Per-unit test**: effective price divided by `unitCount` at or below `maxPricePerUnit`. A listing with no `unitCount`, or a rule with no `maxPricePerUnit`, skips this test. The reason reads, for example, `$0.46 per nappy, under $0.50`, with the name from `unit.name`.
 
 The decision keeps the reasons as text, with prices in the currency and number format of the install, for example `under $1,100 cap` or `18% below RRP $1,999`. A category with no rule never qualifies.
 

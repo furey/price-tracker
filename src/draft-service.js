@@ -63,6 +63,7 @@ export const validateInput = ({ body, now = new Date(), timeZone = DEFAULT_TIME_
     .map((item) => cleanLine(item, INPUT_LIMITS.mustHave))
     .filter(Boolean)
     .slice(0, INPUT_LIMITS.mustHaves)
+  const unit = cleanLine(value.unit, UNIT_LENGTH)
   if (errors.length > 0) throw new DraftInputError(errors)
   return {
     request,
@@ -72,7 +73,8 @@ export const validateInput = ({ body, now = new Date(), timeZone = DEFAULT_TIME_
     quantity,
     mustHaves,
     links: links.map(publicUrl),
-    ...(value.refurbished === true ? { refurbished: true } : {})
+    ...(value.refurbished === true ? { refurbished: true } : {}),
+    ...(unit ? { unit } : {})
   }
 }
 
@@ -311,3 +313,5 @@ const asArray = (value) => (Array.isArray(value) ? value : [])
 const isObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value)
 
 export { ItemError }
+
+const UNIT_LENGTH = 30

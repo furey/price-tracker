@@ -19,6 +19,7 @@ The other fields are optional:
 - **Budget**, with **Around this** or **Hard limit**. A hard limit caps every alert price.
 - **Need by**: the date you need the product. Checks stop 6 days before it, to allow for delivery, and 3 days before that the app sends one last-chance alert. See [Last chance](/guide/alerts#alert-kinds-last-chance).
 - **How many**: the quantity.
+- **Compare price per (optional)**: a unit name, such as "nappy" or "capsule", for things sold in packs of different sizes. The draft then sets a per-unit alert price for each category.
 - **Refurbished is OK**: adds a `refurbished` category with its own alert price, for units refurbished by the maker or a retailer, with a warranty. Used and open-box stock stays out.
 - **Must-haves**: type a feature and press **Add**.
 - **Links you already found (optional)**: product pages you found yourself. Press **+ Paste another link** for more.

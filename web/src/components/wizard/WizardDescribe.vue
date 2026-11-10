@@ -21,6 +21,7 @@ const form = reactive({
   quantity: 1,
   mustHaves: [],
   refurbished: false,
+  unit: '',
   links: ['']
 })
 const newMustHave = ref('')
@@ -67,7 +68,8 @@ const start = async () => {
       quantity: Number(form.quantity) || 1,
       mustHaves: form.mustHaves,
       links: form.links.map((link) => link.trim()).filter(Boolean),
-      refurbished: form.refurbished
+      refurbished: form.refurbished,
+      unit: form.unit.trim() || null
     })
     emit('created', draft)
   } catch (error) {
@@ -160,6 +162,18 @@ onMounted(async () => {
           <a v-else href="#/settings/deliveryPostcode">Set a {{ postcodeNoun }}</a>
         </p>
       </div>
+    </div>
+    <div class="field">
+      <label for="draft-unit">Compare price per (optional)</label>
+      <input
+        id="draft-unit"
+        v-model="form.unit"
+        type="text"
+        maxlength="30"
+        placeholder="nappy, capsule, tablet"
+      />
+      <p class="hint">For things sold in packs of different sizes. Alerts can then fire on a
+        good price per unit.</p>
     </div>
     <div class="field">
       <label class="check">

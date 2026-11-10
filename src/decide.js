@@ -3,6 +3,7 @@ import { ACCESSORY_CATEGORY, kitListings } from './kits.js'
 import { DEFAULT_REGION } from './regions/index.js'
 import { listingTrust } from './retailers.js'
 import { formatPrice, roundToCurrency, sanitizeOutgoing } from './text.js'
+import { pricePerUnit } from './unit-price.js'
 import {
   CATEGORY_TUNED_PREFIX, NEVER_TUNED_PREFIX, applyTuning, isCategoryMuted, mutedSummary,
   noticeKey, priceAlertCandidates
@@ -29,7 +30,9 @@ export const decide = ({
   const eligible = [...singles, ...assembled.filter((listing) => !listing.tuned)]
   const qualified = eligible
     .map((listing) => ({
-      listing, ...qualify({ listing, rule: item.rules[listing.category], region })
+      listing, ...qualify({
+        listing, rule: item.rules[listing.category], region, unit: item.unit?.name
+      })
     }))
     .filter((result) => result.qualifies)
     .map(({ listing, reasons }) => ({ listing, reasons }))
@@ -94,20 +97,28 @@ export const eligibleListings = (listings) => listings
     effectivePrice: listing.effectivePrice ?? listing.price
   }))
 
-export const qualify = ({ listing, rule, region = DEFAULT_REGION }) => {
+export const qualify = ({ listing, rule, region = DEFAULT_REGION, unit = null }) => {
   if (!rule) return { qualifies: false, reasons: ['no rule for category'] }
   const effective = listing.effectivePrice ?? listing.price
   const cap = capFor({ listing, rule })
   const rrpThreshold = rrpThresholdFor(rule)
+  const perUnit = perUnitCheck({ listing, rule, effective })
   const qualifyingReasons = []
   const money = moneyFormatter(region)
+  const unitName = unit ?? 'unit'
   if (cap !== null && effective <= cap) qualifyingReasons.push(`under ${money(cap)} cap`)
   if (rrpThreshold !== null && effective <= rrpThreshold) {
     qualifyingReasons.push(rrpReason({ effective, rule, money }))
   }
+  if (perUnit?.passes) {
+    qualifyingReasons.push(`${money(perUnit.price)} per ${unitName}, under ${money(perUnit.cap)}`)
+  }
   if (qualifyingReasons.length) return { qualifies: true, reasons: qualifyingReasons }
-  return { qualifies: false, reasons: missReasons({ effective, cap, rrpThreshold, rule, money }) }
+  const reasons = missReasons({ effective, cap, rrpThreshold, rule, money, perUnit, unitName })
+  return { qualifies: false, reasons }
 }
+
+export { pricePerUnit }
 
 export const isImplausiblePrice = ({ listing, rule, region = DEFAULT_REGION }) =>
   implausiblePriceConcern({ listing, rule, region }) !== null
@@ -142,6 +153,7 @@ export const formatDealMessage = ({ item, listing, region = DEFAULT_REGION }) =>
     `Model: ${listing.title}`,
     `Price: ${priceText({ listing, money })}`,
     `Retailer: ${listing.retailer}`,
+    ...perUnitLine({ item, listing, money }),
     ...notesLine({ listing, money })
   ]
   return {
@@ -285,11 +297,21 @@ const rrpReason = ({ effective, rule, money }) => {
   return `${pctBelow}% below RRP ${money(rule.rrp)}`
 }
 
-const missReasons = ({ effective, cap, rrpThreshold, rule, money }) => {
+const perUnitCheck = ({ listing, rule, effective }) => {
+  if (!isNumber(rule.maxPricePerUnit)) return null
+  const price = pricePerUnit({ ...listing, effectivePrice: effective })
+  if (price === null) return null
+  return { price, cap: rule.maxPricePerUnit, passes: price <= rule.maxPricePerUnit }
+}
+
+const missReasons = ({ effective, cap, rrpThreshold, rule, money, perUnit, unitName }) => {
   const reasons = []
   if (cap !== null) reasons.push(`${money(effective)} over ${money(cap)} cap`)
   if (rrpThreshold !== null) {
     reasons.push(`less than ${rule.minPctBelowRrp}% below RRP ${money(rule.rrp)}`)
+  }
+  if (perUnit) {
+    reasons.push(`${money(perUnit.price)} per ${unitName}, over ${money(perUnit.cap)}`)
   }
   return reasons.length ? reasons : ['rule has no usable thresholds']
 }
@@ -340,6 +362,12 @@ const isNumber = (value) => typeof value === 'number' && Number.isFinite(value)
 const deliveryNote = ({ amount, money }) => {
   if (!isNumber(amount)) return null
   return amount === 0 ? 'free delivery' : `delivery ${money(amount)}`
+}
+
+const perUnitLine = ({ item, listing, money }) => {
+  const price = pricePerUnit(listing)
+  if (!item.unit?.name || price === null) return []
+  return [`Per ${item.unit.name}: ${money(price)} (${listing.unitCount} in the listing)`]
 }
 
 const moneyFormatter = (region) => (amount) =>

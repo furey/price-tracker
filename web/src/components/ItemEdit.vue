@@ -317,7 +317,7 @@ onUnmounted(() => window.removeEventListener('beforeunload', warnBeforeLeaving))
 
       <section id="alert-prices" class="card edit-card">
         <h2>Alert prices</h2>
-        <SectionErrors :prefixes="['rules', 'dedupe', 'heartbeat', 'deadline']" />
+        <SectionErrors :prefixes="['rules', 'dedupe', 'heartbeat', 'deadline', 'unit']" />
         <EditAlertPrices :config="draft.config" :lowest="lowest" />
       </section>
 

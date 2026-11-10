@@ -206,6 +206,7 @@ export const assembleConfig = ({
     config.directSchedules = directSchedules
   }
   if (input?.refurbished) applyRefurbished({ config, accepted: true })
+  if (input?.unit) config.unit = { name: input.unit }
   if (input?.needBy) {
     config.deadline = {
       needBy: input.needBy,
@@ -257,7 +258,7 @@ const CONTROL_CHARS_KEEP_NEWLINE =
 const KNOWN_KEYS = [
   'id', 'name', 'product', 'categories', 'rules', 'sources', 'schedules', 'direct',
   'directSchedules', 'ntfy', 'research', 'dedupe', 'heartbeat', 'kits', 'deadline',
-  'accept'
+  'accept', 'unit'
 ]
 
 const parseQuestions = (value) => {
@@ -311,7 +312,8 @@ const parseRules = ({ rules, idMap }) => Object.fromEntries([...idMap].map(([sou
     maxPrice: positive(rule.maxPrice),
     maxPriceIfClearance: positive(rule.maxPriceIfClearance),
     rrp: positive(rule.rrp),
-    minPctBelowRrp: percent(rule.minPctBelowRrp)
+    minPctBelowRrp: percent(rule.minPctBelowRrp),
+    maxPricePerUnit: positive(rule.maxPricePerUnit)
   } : {}]
 }))
 
@@ -434,7 +436,8 @@ const hardenRule = ({ rule = {}, reasoning, input }) => {
     maxPrice,
     maxPriceIfClearance: clearance,
     rrp,
-    minPctBelowRrp: rrp ? rule.minPctBelowRrp ?? null : null
+    minPctBelowRrp: rrp ? rule.minPctBelowRrp ?? null : null,
+    maxPricePerUnit: input?.unit ? rule.maxPricePerUnit ?? null : null
   })
 }
 
