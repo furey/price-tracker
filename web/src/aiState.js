@@ -22,7 +22,10 @@ export const holdFor = (usage) => {
   return { reason: guard.reason, label: REASON_LABELS[guard.reason] ?? 'paused' }
 }
 
+export const claudeDisconnected = computed(() => aiUsage.value?.guard?.reason === 'disconnected')
+
 const REASON_LABELS = {
+  disconnected: 'waiting for Claude',
   paused: 'paused by you',
   reserve: 'above your Claude reserve',
   limited: 'Claude limit reached'

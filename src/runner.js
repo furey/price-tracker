@@ -32,6 +32,7 @@ import { capReachedMessage, capStatus, takeCapNotice } from './ai-usage.js'
 import { sendAppNotice } from './app-notice.js'
 import { currentGuard, noticeGuardChange, skipReason, stopReason } from './claude-guard.js'
 import { recordRateLimit } from './claude-usage.js'
+import { NOT_CONNECTED, recordClaudeLogin } from './claude-connection.js'
 import { applyTuning, enabledDirect } from './tuning.js'
 
 export const TICK_LOCK_PATH = join(STATE_DIR, 'tick.lock')
@@ -88,6 +89,11 @@ export const runItem = async ({
       ...(recentSites ? { recentSites } : {}),
       ...(token ? { claudeToken: token } : {})
     })
+    if (mode === RESEARCH_MODE && result.loginError) {
+      recordClaudeLogin({ db, ok: false, error: result.errors?.[0], now })
+      return skipRun({ context, reason: `Skipped: ${NOT_CONNECTED}` })
+    }
+    if (mode === RESEARCH_MODE && result.ok) recordClaudeLogin({ db, ok: true, now })
     if (result.skipped) {
       await noticeGuardChange({
         db, decision: currentGuard({ db }), send: appNotice, log: itemLog
@@ -110,7 +116,7 @@ export const rateLimitHandler = ({ db, runId, stopWhenOver = false }) => {
     if (!stopWhenOver || checked) return null
     checked = true
     const decision = currentGuard({ db })
-    if (decision.allow || decision.reason === 'paused') return null
+    if (decision.allow || ['paused', 'disconnected'].includes(decision.reason)) return null
     return stopReason(decision)
   }
 }

@@ -85,7 +85,7 @@ Scheduled AI research stops for every item. Free checks keep running, and their 
 
 When AI checks are paused or over your reserve, **Run now** shows the reason and a **Run anyway** button. **Run anyway** ignores the pause and the reserve for that one run. A waiting draft step offers **Run anyway** in the same way.
 
-**Run anyway** does not get past the monthly cap.
+**Run anyway** does not get past the monthly cap, and does not run while [Claude is not connected](#without-claude).
 
 ## The Claude login token
 
@@ -100,3 +100,18 @@ The app runs Claude with a login token from your Claude subscription. With Docke
 **Test Claude login** runs one tiny Claude call and shows "Claude login works" or the error. When the token is wrong or expired, it tells you to run `claude setup-token` again. The page never shows the saved token.
 
 On a Mac where `claude` is already signed in, you do not need a token.
+
+## Without Claude
+
+Claude is not connected when no token is set and `claude` is not signed in, or when Claude rejects the token. The app learns this from the first Claude call that fails to sign in: the check at startup, a research run, a draft, or **Test Claude login**.
+
+While Claude is not connected:
+
+- The item list and **Settings** show a **Connect Claude** card in place of the **Claude usage** card. Its button opens the **Claude login token** row.
+- Scheduled AI research is skipped. Each skipped run shows "Skipped: Claude is not connected" under **Recent runs**. Skipped runs do not count toward the monthly cap, start no 2-hour wait, and send no alert.
+- Item pages show **Waiting for Claude** for the next AI check.
+- **Run now** and **Test run** show "Claude is not connected" and a link to Settings. **Run anyway** does not apply.
+- **New item** offers [Add by hand](/guide/new-item#add-by-hand).
+- Free checks, Chrome checks, price history, and alerts keep working.
+
+Save a new token, or press **Test Claude login** after you sign in to `claude`, and AI research starts again at the next scheduled check.

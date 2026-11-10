@@ -89,6 +89,7 @@ const runLoginTest = async () => {
     loginTest.value = { ok: false, error: error.message }
   } finally {
     testingLogin.value = false
+    usageCard.value?.load()
   }
 }
 
@@ -190,7 +191,7 @@ const apply = async ({ key, changes, success }) => {
   try {
     settings.value = await saveSettings(changes)
     drafts[key] = ''
-    if (RESERVE_KEYS.includes(key)) usageCard.value?.load()
+    if (RESERVE_KEYS.includes(key) || key === 'claudeOauthToken') usageCard.value?.load()
     if (key === 'aiMonthlyCap') usage.value = await getAiUsage().catch(() => usage.value)
     notice.value = { tone: 'good', text: success }
   } catch (error) {

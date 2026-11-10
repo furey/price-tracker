@@ -15,7 +15,8 @@ const kind = computed(() => props.draft.errorKind)
 const pill = computed(() => ({
   out_of_scope: { tone: 'failed', text: 'Out of scope' },
   duplicate: { tone: 'neutral', text: 'Already tracking' },
-  limited: { tone: 'warn', text: 'Waiting' }
+  limited: { tone: 'warn', text: 'Waiting' },
+  login: { tone: 'neutral', text: 'Waiting for Claude' }
 }[kind.value] ?? { tone: 'warn', text: 'Stopped' }))
 
 const retryLabel = computed(() => (props.draft.failedStep === 'research'
@@ -68,6 +69,18 @@ const duplicateHref = computed(() => `#/item/${encodeURIComponent(props.draft.du
         <div class="button-row">
           <button class="btn secondary" type="button" :disabled="busy" @click="emit('retry')">
             {{ resetText ? `Retry after ${resetText}` : 'Retry' }}
+          </button>
+          <button class="btn link" type="button" :disabled="busy" @click="emit('dismiss')">
+            Discard
+          </button>
+        </div>
+      </template>
+      <template v-else-if="kind === 'login'">
+        <p class="body-text">{{ draft.error }}</p>
+        <div class="button-row">
+          <a class="btn" href="#/new/hand">Add by hand</a>
+          <button class="btn secondary" type="button" :disabled="busy" @click="emit('retry')">
+            Try again
           </button>
           <button class="btn link" type="button" :disabled="busy" @click="emit('dismiss')">
             Discard

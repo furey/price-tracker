@@ -6,6 +6,7 @@ import { confirmPauseAllAi, confirmResumeAi } from '../confirmCopy.js'
 import { formatDateTime, formatShortWhen, formatTime } from '../format.js'
 import { useStoredOpen } from '../useStoredOpen.js'
 import AppIcon from './AppIcon.vue'
+import ConnectClaudeCard from './ConnectClaudeCard.vue'
 
 const loadError = ref(null)
 const busy = ref(null)
@@ -146,7 +147,8 @@ defineExpose({ load })
 </script>
 
 <template>
-  <section class="usage card" aria-label="Claude usage">
+  <ConnectClaudeCard v-if="state === 'disconnected'" :source="usage.connection?.source ?? null" />
+  <section v-else class="usage card" aria-label="Claude usage">
     <button
       class="usage-toggle"
       type="button"

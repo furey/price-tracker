@@ -10,6 +10,7 @@ import {
 } from './tuning.js'
 import { acceptsRefurbished } from './refurbished.js'
 import { validateResearch } from './validate.js'
+import { isLoginError } from './claude-connection.js'
 
 const DEFAULT_MAX_TURNS = 80
 const DEFAULT_TOOLS = 'WebSearch,WebFetch'
@@ -645,6 +646,7 @@ const USAGE_LIMIT_PATTERN =
   /usage limit|limit reached|rate.?limit|resets? at|out of (?:extra )?usage/i
 
 const errorKind = ({ text, rateLimit }) => {
+  if (isLoginError(text)) return 'login'
   if (rateLimit && rateLimit.status && rateLimit.status !== 'allowed') return 'limited'
   return USAGE_LIMIT_PATTERN.test(text) ? 'limited' : 'error'
 }
@@ -676,6 +678,7 @@ const attempt = async ({
       ok: false,
       ran: false,
       skipped: error.kind === 'skipped' ? error.message : null,
+      loginError: error.kind === 'login',
       errors: [error.message],
       costUsd: error.costUsd ?? 0,
       sessionId: error.sessionId ?? null,
@@ -737,5 +740,6 @@ const finalResult = ({ outcome, attempts, costUsd }) => ({
   costUsd,
   sessionId: outcome.sessionId,
   rawText: outcome.rawText,
-  skipped: outcome.skipped ?? null
+  skipped: outcome.skipped ?? null,
+  loginError: outcome.loginError === true
 })

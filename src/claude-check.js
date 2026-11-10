@@ -6,6 +6,7 @@ import { runClaude } from './research.js'
 import { CLAUDE_LOCK_PATH, withClaudeLock } from './runner.js'
 import { claudeToken } from './settings.js'
 import { lastReadAt, recordRateLimit } from './claude-usage.js'
+import { claudeConnection, recordClaudeOutcome } from './claude-connection.js'
 
 export const LOGIN_TEST_PROMPT = 'Reply with the word ok'
 export const LOGIN_TEST_TIMEOUT_MS = 90_000
@@ -35,6 +36,7 @@ export const testClaudeLogin = async ({
           onRateLimit: (event) => { recordRateLimit({ db, event, source: 'login-test' }) },
           ...(spawnImpl ? { spawnImpl } : {})
         })
+        recordClaudeOutcome({ db, env })
         return { ok: true, reply: hide(reply.resultText.trim().slice(0, 200), token) }
       }
     })
@@ -46,6 +48,7 @@ export const testClaudeLogin = async ({
         error: `AI busy: ${error.label ?? 'another AI run'}. Try again when it finishes.`
       }
     }
+    recordClaudeOutcome({ db, error, env })
     const message = hide(String(error.message).slice(0, 500), token)
     return { ok: false, error: message, hint: hintFor(message) }
   }
@@ -85,12 +88,14 @@ export const probeClaudeUsage = async ({
           },
           ...(spawnImpl ? { spawnImpl } : {})
         })
+        recordClaudeOutcome({ db, env, now })
       }
     })
   } catch (error) {
     if (error instanceof LockHeldError) {
       return { ok: false, busy: true, error: `AI busy: ${error.label ?? 'another AI run'}.` }
     }
+    recordClaudeOutcome({ db, error, env, now })
     if (!seen.parsed) return { ok: false, error: hide(String(error.message).slice(0, 300), token) }
   }
   if (!seen.parsed) return { ok: false, error: 'Claude replied but sent no usage reading.' }
@@ -102,6 +107,26 @@ export const nextProbeAt = ({ db }) => {
   const row = db.prepare('SELECT value FROM settings WHERE key = :key').get({ key: PROBE_KEY })
   if (!row?.value) return null
   return new Date(Date.parse(row.value) + PROBE_INTERVAL_MS).toISOString()
+}
+
+export const RECHECK_INTERVAL_MS = 6 * 3_600_000
+export const RECHECK_KEY = 'claudeRecheckAt'
+
+export const recheckDisconnected = async ({
+  db, now = new Date(), log = () => {}, env = process.env, ...options
+}) => {
+  if (claudeConnection({ db, env }).connected) return null
+  const row = db.prepare('SELECT value FROM settings WHERE key = :key').get({ key: RECHECK_KEY })
+  const lastAt = row?.value ? Date.parse(row.value) : null
+  if (lastAt !== null && now.getTime() - lastAt < RECHECK_INTERVAL_MS) return null
+  db.prepare(`
+    INSERT INTO settings (key, value, updated_at) VALUES (:key, :value, :value)
+    ON CONFLICT (key) DO UPDATE SET value = :value, updated_at = :value`)
+    .run({ key: RECHECK_KEY, value: now.toISOString() })
+  const outcome = await probeClaudeUsage({ db, env, now, ...options })
+  const connected = claudeConnection({ db, env }).connected
+  log(`Claude login recheck: ${connected ? 'connected again' : 'still not connected'}`)
+  return outcome
 }
 
 export const startupProbe = async ({ db, now = new Date(), log = () => {}, ...options }) => {

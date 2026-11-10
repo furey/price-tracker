@@ -7,13 +7,15 @@ export const nextChecks = ({ item, hold }) => [
 
 export const aiHoldNote = ({ item, hold }) => {
   if (!hold || item.status !== 'active' || !(item.schedules ?? []).length) return null
-  return item.nextDirectSlot
-    ? 'AI checks paused · free checks running'
-    : 'AI checks paused'
+  const state = hold.reason === 'disconnected' ? 'Waiting for Claude' : 'AI checks paused'
+  return item.nextDirectSlot ? `${state} · free checks running` : state
 }
 
 const aiCheck = ({ item, hold }) => {
   if (!(item.schedules ?? []).length) return { text: 'Off', muted: true }
+  if (hold?.reason === 'disconnected' && item.status === 'active') {
+    return { text: 'Waiting for Claude', muted: true }
+  }
   if (hold && item.status === 'active') return { text: 'Paused', detail: hold.label, muted: true }
   return slotText({ slot: item.nextSlot, item })
 }

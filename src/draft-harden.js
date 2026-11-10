@@ -447,7 +447,7 @@ const fallbackCap = ({ rrp, reasoning, input }) => {
   return positive(input?.budget)
 }
 
-const suggestedDrop = (rules) => {
+export const suggestedDrop = (rules) => {
   const caps = Object.values(rules).map((rule) => rule.maxPrice).filter(Boolean)
   if (caps.length === 0) return 25
   return Math.max(10, Math.round((Math.min(...caps) * 0.03) / 5) * 5)

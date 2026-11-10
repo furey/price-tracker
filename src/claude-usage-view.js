@@ -5,6 +5,7 @@ import {
   WEEKLY_WINDOW, formatChanged, latestReadings, usageHistory, windowLabel
 } from './claude-usage.js'
 import { claudeLimits } from './settings.js'
+import { claudeConnection } from './claude-connection.js'
 
 export const claudeUsageView = ({ db, now = new Date(), env = process.env }) => {
   const limits = claudeLimits({ db, env })
@@ -19,6 +20,7 @@ export const claudeUsageView = ({ db, now = new Date(), env = process.env }) => 
     weekly: readings.find(({ window }) => window === WEEKLY_WINDOW) ?? null,
     session: readings.find(({ window, expired }) => window === 'five_hour' && !expired) ?? null,
     guard: describeGuard(currentGuard({ db, now, env })),
+    connection: publicConnection(claudeConnection({ db, env })),
     limits,
     history: usageHistory({ db, now }),
     formatChanged: formatChanged({ db }),
@@ -26,3 +28,5 @@ export const claudeUsageView = ({ db, now = new Date(), env = process.env }) => 
     month: capStatus({ db, now, env })
   }
 }
+
+const publicConnection = ({ connected, source, checkedAt }) => ({ connected, source, checkedAt })

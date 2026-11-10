@@ -9,6 +9,9 @@ export const logout = () => sendJson({ url: '/api/logout', method: 'POST', body:
 
 export const getItems = () => request('/api/items')
 
+export const createHandItem = (input) =>
+  sendJson({ url: '/api/items', method: 'POST', body: input })
+
 export const getHistory = ({ id, days }) =>
   request(`/api/items/${encodeURIComponent(id)}/history?days=${days}`)
 

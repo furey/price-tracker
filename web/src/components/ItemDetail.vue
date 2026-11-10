@@ -21,7 +21,7 @@ import {
   formatMoney, formatDateTime, formatDayMonth, formatPausedUntil, timeZoneLabel
 } from '../format.js'
 import { describeSchedule } from '../schedulePresets.js'
-import { aiHold, aiUsage, loadAiUsage } from '../aiState.js'
+import { aiHold, aiUsage, claudeDisconnected, loadAiUsage } from '../aiState.js'
 import {
   confirmRestore, confirmResumeItem, confirmRun
 } from '../confirmCopy.js'
@@ -412,7 +412,7 @@ const askRun = async ({ dryRun, anyway }) => {
 }
 
 const launch = async (dryRun, runAnyway = false) => {
-  if (!(await askRun({ dryRun, anyway: runAnyway }))) return
+  if (!claudeDisconnected.value && !(await askRun({ dryRun, anyway: runAnyway }))) return
   launching.value = dryRun ? 'dry' : 'run'
   notice.value = null
   try {
@@ -424,6 +424,11 @@ const launch = async (dryRun, runAnyway = false) => {
     pollUntil.value = Date.now() + POLL_AFTER_START_MS
     await refresh()
   } catch (error) {
+    if (error.body?.guard?.reason === 'disconnected') {
+      notice.value = { tone: 'info', text: error.message, connect: true }
+      loadAiUsage().catch(() => null)
+      return
+    }
     if (error.body?.guard) {
       notice.value = { tone: 'warn', text: error.message, overrideDryRun: dryRun }
       return
@@ -586,6 +591,10 @@ watch(() => props.focus, scrollToFocus)
         >
           Run anyway
         </button>
+      </div>
+      <div v-else-if="notice?.connect" class="banner info guard-banner" role="status">
+        <p>{{ notice.text }}</p>
+        <a class="btn small" href="#/settings/claudeOauthToken">Add a Claude login token</a>
       </div>
       <p v-else-if="notice" class="banner" :class="notice.tone" role="status">{{ notice.text }}</p>
       <p v-if="isRunning" class="banner info" role="status">

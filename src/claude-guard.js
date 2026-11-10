@@ -2,10 +2,12 @@ import { SESSION_WINDOW, latestReadings, percentOf, windowLabel } from './claude
 import { claudeLimits, dashboardUrlFrom, resolveSettings } from './settings.js'
 import { settingsLink } from './links.js'
 import { activeRegion } from './region.js'
+import { NOT_CONNECTED, claudeConnection } from './claude-connection.js'
 
 export const GUARD_NOTICE_KEY = 'claudeGuardNotice'
 
-export const guardDecision = ({ readings, limits, now = new Date() }) => {
+export const guardDecision = ({ readings, limits, now = new Date(), connected = true }) => {
+  if (!connected) return { allow: false, reason: 'disconnected', resumesAt: null }
   if (limits.paused) return { allow: false, reason: 'paused', resumesAt: null }
   const blocks = readings
     .filter((reading) => isCurrent({ reading, now }))
@@ -22,6 +24,7 @@ export const reserveFor = ({ window, limits }) => (window === SESSION_WINDOW
 
 export const guardLine = (decision) => {
   if (decision.allow) return 'AI checks running'
+  if (decision.reason === 'disconnected') return 'AI checks waiting for Claude'
   if (decision.reason === 'paused') return 'All AI paused by you'
   const until = decision.resumesAt ? ` until ${shortWhen(decision.resumesAt)}` : ''
   if (decision.reason === 'limited') {
@@ -32,6 +35,7 @@ export const guardLine = (decision) => {
 
 export const guardMessage = (decision) => {
   if (decision.allow) return null
+  if (decision.reason === 'disconnected') return CONNECT_MESSAGE
   if (decision.reason === 'paused') {
     return 'Waiting: all AI is paused by you. Resume AI on the dashboard or in Settings.'
   }
@@ -40,6 +44,7 @@ export const guardMessage = (decision) => {
 }
 
 export const skipReason = (decision) => {
+  if (decision.reason === 'disconnected') return `Skipped: ${NOT_CONNECTED}`
   if (decision.reason === 'paused') return 'Skipped: all AI paused by you'
   const resumes = decision.resumesAt ? ` (resumes after ${longWhen(decision.resumesAt)})` : ''
   return `Skipped: ${usageClause(decision)}${resumes}`
@@ -59,8 +64,12 @@ export const describeGuard = (decision) => ({
 export const currentGuard = ({ db, now = new Date(), env = process.env }) => guardDecision({
   readings: latestReadings({ db }),
   limits: claudeLimits({ db, env }),
-  now
+  now,
+  connected: claudeConnection({ db, env }).connected
 })
+
+export const CONNECT_MESSAGE = `${NOT_CONNECTED}. Add a Claude login token in Settings to run `
+  + 'AI research. Free checks keep running.'
 
 export const noticeGuardChange = async ({ db, decision, now = new Date(), send, log }) => {
   const stored = readNotice(db)
@@ -82,7 +91,7 @@ export const noticeGuardChange = async ({ db, decision, now = new Date(), send, 
 }
 
 export const noticeFor = ({ decision, stored }) => {
-  const usageBlock = !decision.allow && decision.reason !== 'paused'
+  const usageBlock = !decision.allow && !['paused', 'disconnected'].includes(decision.reason)
   if (usageBlock) {
     const key = `${decision.window}|${decision.resumesAt ?? ''}`
     if (stored?.skipping && stored.key === key) return null

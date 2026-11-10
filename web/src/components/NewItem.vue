@@ -4,7 +4,7 @@ import { validateItem } from '../../../src/item-validate.js'
 import {
   cancelDraft, getDraft, retryDraft, runDraftAnyway, saveDraft, saveDraftConfig
 } from '../api.js'
-import { aiUsage, loadAiUsage } from '../aiState.js'
+import { aiUsage, claudeDisconnected, loadAiUsage } from '../aiState.js'
 import { confirmDiscardDraft, confirmDraftAnyway, confirmSaveItem } from '../confirmCopy.js'
 import { provideForm } from '../formContext.js'
 import { regionTimeZone } from '../schedulePresets.js'
@@ -12,6 +12,7 @@ import {
   FLOW_STEPS, POLL_MS, REVIEW_STEPS, cloneJson, draftName, isBusy, progressFor, sameJson
 } from '../wizard.js'
 import AiChangeSheet from './wizard/AiChangeSheet.vue'
+import HandItemForm from './wizard/HandItemForm.vue'
 import ReviewModels from './wizard/ReviewModels.vue'
 import ReviewPrices from './wizard/ReviewPrices.vue'
 import ReviewSchedule from './wizard/ReviewSchedule.vue'
@@ -50,6 +51,7 @@ const notice = ref(null)
 const changeOpen = ref(false)
 const saveResult = ref(null)
 const now = ref(Date.now())
+const usageChecked = ref(aiUsage.value !== null)
 let pollTimer = null
 let clockTimer = null
 
@@ -198,6 +200,7 @@ watch(() => props.draftId, () => {
 
 onMounted(() => {
   load()
+  loadAiUsage().catch(() => null).finally(() => { usageChecked.value = true })
   pollTimer = setInterval(() => {
     if (isBusy(draft.value) || changeRunning.value) load()
   }, POLL_MS)
@@ -214,7 +217,14 @@ onUnmounted(() => {
 
 <template>
   <main class="wizard">
-    <WizardDescribe v-if="!draftId" @created="created" />
+    <template v-if="!draftId">
+      <p v-if="!usageChecked" class="muted">Loading...</p>
+      <HandItemForm
+        v-else-if="step === 'hand' || claudeDisconnected"
+        :needs-claude="claudeDisconnected"
+      />
+      <WizardDescribe v-else @created="created" />
+    </template>
 
     <p v-else-if="loading" class="muted">Loading the draft...</p>
 

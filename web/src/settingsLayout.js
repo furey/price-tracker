@@ -53,7 +53,7 @@ export const SETTING_EFFECTS = {
   claudeSessionReservePercent: 'AI checks stop when five-hour session usage passes this '
     + 'percentage, and start again when the session resets.',
   claudeOauthToken: 'Every AI check and draft runs Claude with the new token. A wrong token '
-    + 'makes every AI check fail until you fix it. Use Test Claude login after saving.',
+    + 'stops AI checks until you fix it. Use Test Claude login after saving.',
   ntfyToken: 'Alerts are sent to ntfy with the new token. A wrong token stops alerts from '
     + 'reaching your phone.',
   dashboardUrl: 'Links in new alerts open this address. Alerts already sent keep the old link.',

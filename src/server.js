@@ -44,6 +44,7 @@ import {
   saveItemConfig, itemRecords, itemVersionConfig, itemVersions
 } from './item-store.js'
 import { validateItem } from './item-validate.js'
+import { createHandItem } from './hand-item.js'
 import { TREND_DAYS, headlinePrices } from './item-trend.js'
 import { hasLiveDeal } from './verdict.js'
 import { TuningError, applyTuningChanges, MAX_BY_LENGTH, MAX_REASON_LENGTH } from './tuning.js'
@@ -91,7 +92,9 @@ export const createApp = ({
     res.json(getItems().map((record) => describeItem({ db, record, now: now() })))
   })
 
-  addManageRoutes({ app, db, now, findRecord, fetchImpl, env, screenshotDir })
+  addManageRoutes({
+    app, db, now, findRecord, fetchImpl, lookupImpl, deliver, env, screenshotDir
+  })
   addScreenshotRoutes({ app, db, now, env, dir: screenshotDir })
   addDraftRoutes({
     app, db, now, worker, claudeLockPath, fetchImpl, lookupImpl, deliver, env, sleep, pauseMs
@@ -200,7 +203,8 @@ export const createApp = ({
       return res.status(409).json({ error: `AI busy: ${aiHolder.label ?? 'another AI run'}` })
     }
     const guard = currentGuard({ db, now: now(), env })
-    if (!guard.allow && req.body?.runAnyway !== true) {
+    const overridable = guard.reason !== 'disconnected' && req.body?.runAnyway === true
+    if (!guard.allow && !overridable) {
       const described = describeGuard(guard)
       return res.status(409).json({ error: described.message, guard: described })
     }
@@ -309,7 +313,9 @@ const ITEM_ERROR_STATUS = { 'not-found': 404, conflict: 409, invalid: 400, state
 const LOWEST_DAYS = 90
 const DIRECT_TEST_SCHEDULE = { cron: '0 0 * * *', tz: DEFAULT_REGION.timeZone }
 
-const addManageRoutes = ({ app, db, now, findRecord, fetchImpl, env, screenshotDir }) => {
+const addManageRoutes = ({
+  app, db, now, findRecord, fetchImpl, lookupImpl, deliver, env, screenshotDir
+}) => {
   const guarded = (handler) => async (req, res) => {
     try {
       await handler(req, res)
@@ -321,6 +327,14 @@ const addManageRoutes = ({ app, db, now, findRecord, fetchImpl, env, screenshotD
   }
   const describe = (record) => describeItem({ db, record, now: now() })
   const id = (req) => req.params.id
+
+  app.post('/api/items', guarded(async (req, res) => {
+    const created = await createHandItem({
+      db, body: req.body, region: activeRegion({ db }), now: now(), env, fetchImpl, lookupImpl,
+      deliver
+    })
+    res.status(201).json(created)
+  }))
 
   app.post('/api/items/:id/pause', guarded((req, res) => {
     res.json(describe(pauseItem({

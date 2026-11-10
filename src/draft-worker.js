@@ -21,6 +21,7 @@ import { activeRegion } from './region.js'
 import { CLAUDE_LOCK_PATH, runItem, withClaudeLock } from './runner.js'
 import { claudeToken, deliveryFrom, membershipsFrom, resolveSettings } from './settings.js'
 import { currentGuard } from './claude-guard.js'
+import { NOT_CONNECTED, recordClaudeOutcome } from './claude-connection.js'
 import { failingSites } from './tuning-data.js'
 import { itemRecords } from './item-store.js'
 import { recordRateLimit } from './claude-usage.js'
@@ -109,6 +110,7 @@ const runJob = async ({ context: workerContext, draft }) => {
         return step.ai({ context, draft: running, signal: controller.signal })
       }
     })
+    recordClaudeOutcome({ db, now: now() })
     if (isCancelled({ db, id: draft.id })) return 'done'
     await step.finish({ context, draft: getDraft({ db, id: draft.id }), result: aiResult })
     return 'done'
@@ -119,6 +121,8 @@ const runJob = async ({ context: workerContext, draft }) => {
       return 'busy'
     }
     if (isCancelled({ db, id: draft.id })) return 'done'
+    recordClaudeOutcome({ db, error, now: now() })
+    const loggedOut = error.kind === 'login'
     log(`draft ${draft.id} ${draft.job} failed: ${error.message}`)
     const failed = failJob({
       db,
@@ -128,7 +132,9 @@ const runJob = async ({ context: workerContext, draft }) => {
       resetsAt: error.resetsAt ?? null,
       now: now()
     })
-    if (['scope', 'research'].includes(draft.job)) await safeNotify({ context, draft: failed })
+    if (!loggedOut && ['scope', 'research'].includes(draft.job)) {
+      await safeNotify({ context, draft: failed })
+    }
     return 'done'
   } finally {
     controllers.delete(draft.id)
@@ -415,10 +421,14 @@ const safeNotify = async ({ context, draft }) => {
 
 const describeError = (error) => {
   if (error.kind === 'cancelled') return 'The app stopped while this step was running.'
+  if (error.kind === 'login') return LOGIN_ADVICE
   if (error.kind === 'timeout') return `${error.message}. Your answers are kept.`
   if (error.errors) return `Claude's reply was not valid: ${error.errors.slice(0, 5).join('; ')}`
   return String(error.message).slice(0, 1000)
 }
+
+const LOGIN_ADVICE = `${NOT_CONNECTED}. Add a Claude login token in Settings, then press `
+  + 'Try again. You can also add the item by hand.'
 
 export const draftTitle = (draft) => draft.research?.title ?? draft.config?.name
   ?? String(draft.input?.request ?? 'New item').slice(0, 40)

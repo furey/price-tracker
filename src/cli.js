@@ -14,7 +14,7 @@ import { install, uninstall } from './launchd.js'
 import { LockHeldError } from './lock.js'
 import { research } from './research.js'
 import { createDraftWorker } from './draft-worker.js'
-import { startupProbe } from './claude-check.js'
+import { recheckDisconnected, startupProbe } from './claude-check.js'
 import {
   CLAUDE_LOCK_PATH, DIRECT_MODE, RESEARCH_MODE, TICK_LOCK_PATH, recordObservation,
   runItemLocked, schedulesFor, sendTestNotification, tick
@@ -217,6 +217,8 @@ const warnOnly = (message) => {
 }
 
 const runTick = async (db) => {
+  await recheckDisconnected({ db, log })
+    .catch((error) => log(`Claude login recheck failed: ${error.message}`))
   try {
     const outcomes = await tick({ db, log })
     const ran = outcomes.filter(({ action }) => action === 'ran').length

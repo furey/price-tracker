@@ -79,6 +79,18 @@ Press **Run full test (1 AI check)** to run one AI research check against the dr
 
 Saving makes the item active, starts its schedules, records today's prices as the first history point, and sends a test alert to the new topic.
 
+## Add by hand
+
+When Claude is not connected, **New item** shows **New items need Claude** and a short form. You can also open the form at `#/new/hand`, or press **Add by hand** on a draft that stopped because Claude is not connected.
+
+- **Name**: the name on the dashboard and in alerts.
+- **What to look for**: the product, the models that count, and what to avoid.
+- **Category (optional)**: a short name for the models that count. Blank uses the name.
+- **Alert price**: you get an alert when a price in the category is at or below it.
+- **Product page (optional)**: the app reads the price from this page twice a day, as a free check. It works on pages that publish their price for search engines, and on Shopify shops.
+
+Press **Add item**. The app makes a new ntfy topic, the Normal AI schedule, and a test alert, like the wizard. The Edit page opens next, for more categories, shops, and schedules. When the product page gives no price, the item is still added without a free check, and the form says why.
+
 ## Drafts
 
 Open drafts show at the top of the item list as cards with a dashed border. Each card shows the state, such as **Needs your answers** or **Ready to review**, and a button to go on. Press **Discard** to delete a draft.
@@ -90,6 +102,7 @@ A draft is kept in the database, so it survives a closed tab and a restart. Pres
 - **Stopped**: a step timed out or failed. Press **Retry**. Your answers are kept.
 - **Usage limit**: Claude reported that your usage limit is reached. The draft shows the reset time when Claude gives one. Nothing retries on its own.
 - **Waiting**: only one AI job runs at a time. A draft step waits while a research run uses Claude, and the page names the job it waits for.
+- **Waiting for Claude**: Claude is not connected. Add a login token in Settings and press **Try again**, or press **Add by hand**.
 - **AI paused or over your reserve**: the draft step waits until your usage is back under your reserve. Press **Run anyway** to run this draft step now.
 
 ## Draft costs
