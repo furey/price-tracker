@@ -8,6 +8,7 @@ import {
 } from './db.js'
 import { lowestPerRetailerPerDay } from './decide.js'
 import { startDaemon } from './daemon.js'
+import { sweepItems } from './bot-check-routes.js'
 import { install, uninstall } from './launchd.js'
 import { LockHeldError } from './lock.js'
 import { research } from './research.js'
@@ -19,8 +20,11 @@ import {
 } from './runner.js'
 import { activeRegion } from './region.js'
 import { nextSlot } from './schedule.js'
-import { deliveryFrom, resolveSettings, rotateAppTopic } from './settings.js'
+import {
+  dashboardUrlFrom, deliveryFrom, resolveSettings, rotateAppTopic
+} from './settings.js'
 import { startServer } from './server.js'
+import { sweepPrompt } from './sweep.js'
 import { formatPrice } from './text.js'
 import {
   exportConfig, pauseItem, pinSeeds, requireItem, resumeItem, rotateTopic, seedItems,
@@ -89,6 +93,14 @@ const commands = {
     const region = activeRegion({ db })
     const tz = item.schedules?.[0]?.tz ?? region.timeZone
     printHistoryTable({ rows: lowestPerRetailerPerDay(rows, { tz }), region })
+  },
+
+  sweep: async () => {
+    const db = openStore()
+    const items = sweepItems({ db, records: itemRecords({ db }), now: new Date() })
+    if (items.length === 0) return console.log('No blocked pages to check in Chrome')
+    const dashboardUrl = dashboardUrlFrom(resolveSettings({ db })) || undefined
+    console.log(sweepPrompt({ items, dashboardUrl }))
   },
 
   status: async () => {

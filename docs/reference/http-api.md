@@ -90,18 +90,19 @@ Pause, resume, archive, and restore return the item as `GET /api/items` describe
 
 ## Tuning and feedback
 
-| Method | Path                                 | Notes                                                                                              |
-| ------ | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `POST` | `/api/items/:id/tuning`              | body `{ baseVersion, changes, by, reason?, note?, feedback? }`; saves a version with source `tune` |
-| `GET`  | `/api/items/:id/feedback?limit=50`   | feedback rows; `limit` up to `500`                                                                 |
-| `POST` | `/api/items/:id/feedback`            | body `{ reason, by, note?, alertId? }`; `201 { feedbackId }`                                       |
-| `GET`  | `/api/items/:id/suggestions`         | `{ version, suggestions, held, waiting, ... }`                                                     |
-| `POST` | `/api/items/:id/suggestions/dismiss` | body `{ suggestionId, by, permanent? }`; `201 { feedbackId }`                                      |
-| `POST` | `/api/items/:id/suggestions/restore` | body `{ suggestionId, by }`; `201 { feedbackId }`                                                  |
-| `GET`  | `/api/items/:id/site-stats?days=30`  | results by source; `days` is `30` or `90`; each row has `botCheck` `{ at, note }` or `null`        |
-| `GET`  | `/api/bot-checks`                    | `{ checks }`: unseen bot checks on active items, newest first                                      |
-| `POST` | `/api/bot-checks/seen`               | body `{ checks, by? }`; `201 { seen }`; marks the listed bot checks seen                           |
-| `GET`  | `/api/tuning/failing-sites`          | sites that blocked or failed on every item                                                         |
+| Method | Path                                 | Notes                                                                                                    |
+| ------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `POST` | `/api/items/:id/tuning`              | body `{ baseVersion, changes, by, reason?, note?, feedback? }`; saves a version with source `tune`       |
+| `GET`  | `/api/items/:id/feedback?limit=50`   | feedback rows; `limit` up to `500`                                                                       |
+| `POST` | `/api/items/:id/feedback`            | body `{ reason, by, note?, alertId? }`; `201 { feedbackId }`                                             |
+| `GET`  | `/api/items/:id/suggestions`         | `{ version, suggestions, held, waiting, ... }`                                                           |
+| `POST` | `/api/items/:id/suggestions/dismiss` | body `{ suggestionId, by, permanent? }`; `201 { feedbackId }`                                            |
+| `POST` | `/api/items/:id/suggestions/restore` | body `{ suggestionId, by }`; `201 { feedbackId }`                                                        |
+| `GET`  | `/api/items/:id/site-stats?days=30`  | results by source; `days` is `30` or `90`; each row has `botCheck` `{ at, note }` or `null`              |
+| `GET`  | `/api/bot-checks`                    | `{ checks }`: unseen bot checks on active items, newest first                                            |
+| `POST` | `/api/bot-checks/seen`               | body `{ checks, by? }`; `201 { seen }`; marks the listed bot checks seen                                 |
+| `GET`  | `/api/sweep`                         | `{ items }`: blocked pages on active items for a [Chrome sweep](/guide/chrome-observations#chrome-sweep) |
+| `GET`  | `/api/tuning/failing-sites`          | sites that blocked or failed on every item                                                               |
 
 Each entry of `changes` has a `kind`: `mute-category`, `unmute-category`, `mute-site`, `weekly-site`, `restore-site`, `mute-search`, `restore-search`, `disable-direct`, `restore-direct`, `never`, or `restore-never`. A feedback `reason` is `not-this-model`, `not-this-product`, `price-too-high`, or `not-now`. `by` is a name of up to `40` characters.
 

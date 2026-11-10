@@ -39,7 +39,22 @@ Handle a bot check in your own time. These steps help, in order:
 2. **Free check**: if the shop is Shopify or publishes JSON-LD, add a free check of the exact product page. See [Free direct checks](/guide/direct-checks).
 3. **Tuning**: set a site that asks every time to **Check weekly**, or press **Mute site**, to save AI runs. A muted site shows no **Bot check** mark.
 
-The app has no automatic Chrome sweep; each Chrome check is one you start. A Chrome check that reads a site the AI could not also triggers the tuning suggestion for weekly checks of that site.
+A Chrome check that reads a site the AI could not also triggers the tuning suggestion for weekly checks of that site.
+
+## Chrome sweep
+
+A Chrome sweep checks every blocked page in one go, with Claude in Chrome in your own browser. It lists each site and free check of an active item whose latest scheduled check in the last `30` days was blocked, for any reason. A muted site, a site set to off, and a site with a newer Chrome check are not on the list.
+
+The app never starts a sweep. You start it, and you stay at the browser while it runs.
+
+1. Press **Copy Chrome sweep prompt** on the **Sites asking for a human check** notice, or run `node src/cli.js sweep` (`docker exec price-tracker node src/cli.js sweep` with Docker).
+2. Sign in to the dashboard in Chrome.
+3. Paste the prompt into Claude in Chrome.
+4. Solve any CAPTCHA or bot check that Claude asks you to solve.
+
+The prompt tells Claude to read each page at a normal pace, to stop at a CAPTCHA and ask you, and never to try to get past a block. When Claude has read the pages, it records the prices from the dashboard tab through `POST /api/items/<id>/observations`, so it uses your signed-in session. Each item becomes one Chrome check: it sends no alert, and it clears the **Bot check** mark.
+
+The `sweep` command puts the **Dashboard URL** setting in the prompt. When the setting is empty, replace `<your dashboard address>` in the prompt with the dashboard address.
 
 ## Write the file
 

@@ -209,3 +209,17 @@ const withServer = async (fn) => {
     server.close()
   }
 }
+
+test('GET /api/sweep lists every blocked page, seen or not, with the item categories', async () => {
+  await withServer(async ({ get, send }) => {
+    const first = await get('/api/bot-checks')
+    await send({ path: '/api/bot-checks/seen', body: { checks: first.body.checks } })
+    const { status, body } = await get('/api/sweep')
+    assert.equal(status, 200)
+    assert.deepEqual(body.items.map(({ itemId, categories }) => ({ itemId, categories })),
+      [{ itemId: 'tramp', categories: [{ id: 'base', description: 'O77 alone' }] }])
+    assert.deepEqual(body.items[0].sources.map(({ kind, name, botCheck }) =>
+      `${kind}:${name}:${botCheck}`).sort(),
+    ['direct:Myer:true', 'site:Bing Lee:true', 'site:JB Hi-Fi:false'])
+  })
+})

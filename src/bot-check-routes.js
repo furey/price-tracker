@@ -2,6 +2,7 @@ import { BOT_CHECK_SEEN_REASON, botCheckFlags, seenKey, seenRecord } from './bot
 import { inTransaction, insertFeedback } from './db.js'
 import { activeRegion } from './region.js'
 import { siteStats } from './site-stats.js'
+import { SWEEP_DAYS, sweepItem } from './sweep.js'
 import { loadTuningInputs } from './tuning-data.js'
 import { MAX_BY_LENGTH } from './tuning.js'
 
@@ -11,6 +12,10 @@ export const DEFAULT_SEEN_BY = 'Dashboard'
 
 export const addBotCheckRoutes = ({ app, db, now, getItems }) => {
   const openFlags = () => unseenBotChecks({ db, records: getItems(), now: now() })
+
+  app.get('/api/sweep', (req, res) => {
+    res.json({ items: sweepItems({ db, records: getItems(), now: now() }) })
+  })
 
   app.get('/api/bot-checks', (req, res) => {
     res.json({ checks: openFlags() })
@@ -35,18 +40,27 @@ export const addBotCheckRoutes = ({ app, db, now, getItems }) => {
   })
 }
 
-export const unseenBotChecks = ({ db, records, now }) => {
+export const unseenBotChecks = ({ db, records, now }) => activeStats({
+  db, records, now, days: BOT_CHECK_DAYS
+})
+  .flatMap(({ item, rows, feedback }) => botCheckFlags({ item, rows, feedback }))
+  .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
+
+export const sweepItems = ({ db, records, now }) => activeStats({
+  db, records, now, days: SWEEP_DAYS
+})
+  .map(({ item, rows }) => sweepItem({ item, rows }))
+  .filter(Boolean)
+
+const activeStats = ({ db, records, now, days }) => {
   const region = activeRegion({ db })
   return records
     .filter(({ status }) => status === 'active')
-    .flatMap((record) => {
+    .map((record) => {
       const inputs = loadTuningInputs({ db, itemId: record.id, now })
-      const rows = siteStats({
-        item: record.config, runs: inputs.runs, now, days: BOT_CHECK_DAYS, region
-      })
-      return botCheckFlags({ item: record.config, rows, feedback: inputs.feedback })
+      const rows = siteStats({ item: record.config, runs: inputs.runs, now, days, region })
+      return { item: record.config, rows, feedback: inputs.feedback }
     })
-    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
 }
 
 const cleanText = (value, max) => (typeof value === 'string' ? value.trim().slice(0, max) : '')

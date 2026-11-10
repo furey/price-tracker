@@ -1,0 +1,74 @@
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+import { sweepItem, sweepPrompt } from '../src/sweep.js'
+
+const ITEM = {
+  id: 'drill',
+  name: 'DeWalt drill',
+  product: 'A DeWalt DCD791 drill',
+  categories: [{ id: 'kit', description: 'Drill with batteries' }]
+}
+const BLOCK = {
+  at: '2027-02-09T00:00:00Z', mode: 'research', status: 'blocked', note: 'HTTP 503',
+  url: 'https://www.homedepot.com/p/1'
+}
+
+const row = ({ name, kind = 'site', state = null, recent }) => ({ kind, name, state, recent })
+
+test('a sweep lists site and free-check rows whose latest automatic check was blocked', () => {
+  const rows = [
+    row({ name: 'Home Depot', recent: [BLOCK] }),
+    row({ name: 'Lowes', kind: 'direct', recent: [{ ...BLOCK, note: 'CAPTCHA', url: null }] }),
+    row({ name: 'Amazon', recent: [{ ...BLOCK, status: 'ok' }, BLOCK] }),
+    row({ name: 'Walmart', recent: [{ ...BLOCK, mode: 'manual', status: 'ok' }, BLOCK] }),
+    row({ name: 'Target', state: 'muted', recent: [BLOCK] }),
+    row({ name: 'Best Buy', state: 'off', recent: [BLOCK] }),
+    row({ name: 'Kogan', kind: 'other', recent: [BLOCK] }),
+    row({ name: 'Acme', recent: [] })
+  ]
+  assert.deepEqual(sweepItem({ item: ITEM, rows }), {
+    itemId: 'drill',
+    itemName: 'DeWalt drill',
+    product: 'A DeWalt DCD791 drill',
+    categories: [{ id: 'kit', description: 'Drill with batteries' }],
+    sources: [
+      { kind: 'site', name: 'Home Depot', at: BLOCK.at, note: 'HTTP 503', url: BLOCK.url,
+        botCheck: false },
+      { kind: 'direct', name: 'Lowes', at: BLOCK.at, note: 'CAPTCHA', url: null, botCheck: true }
+    ]
+  })
+})
+
+test('an item with nothing blocked has no sweep entry', () => {
+  assert.equal(sweepItem({ item: ITEM, rows: [row({ name: 'Amazon', recent: [] })] }), null)
+})
+
+test('the sweep prompt names each page, the categories, the rules, and the dashboard', () => {
+  const item = sweepItem({ item: ITEM, rows: [
+    row({ name: 'Home Depot', recent: [BLOCK] }),
+    row({ name: 'Lowes', recent: [{ ...BLOCK, url: null }] })
+  ] })
+  const prompt = sweepPrompt({ items: [item], dashboardUrl: 'http://nas.local:4280' })
+  assert.match(prompt, /Item: DeWalt drill \(id drill\)/)
+  assert.match(prompt, /- kit: Drill with batteries/)
+  assert.match(prompt, /- Home Depot: https:\/\/www\.homedepot\.com\/p\/1/)
+  assert.match(prompt, /- Lowes: no page known; search the site for the item/)
+  assert.match(prompt, /stop and ask me to solve it/)
+  assert.match(prompt, /Never try to get past a block/)
+  assert.match(prompt, /http:\/\/nas\.local:4280/)
+  assert.match(prompt, /\/api\/items\/<item id>\/observations/)
+  assert.match(sweepPrompt({ items: [item] }), /<your dashboard address>/)
+})
+
+test('the JSON shape in the prompt passes the observation validator once filled in', async () => {
+  const { validateResearch } = await import('../src/validate.js')
+  const prompt = sweepPrompt({ items: [], dashboardUrl: 'http://x' })
+  const json = prompt.slice(prompt.indexOf('{\n'), prompt.lastIndexOf('}') + 1)
+  const filled = JSON.parse(json.replaceAll('<category id>', 'kit')
+    .replaceAll('<product page address>', 'https://www.homedepot.com/p/1')
+    .replace('<ISO date and time of the check>', '2027-02-09T00:00:00Z')
+    .replaceAll('"price": 0', '"price": 199')
+    .replaceAll('"effectivePrice": 0', '"effectivePrice": 199'))
+  const result = validateResearch({ data: filled, categoryIds: ['kit'] })
+  assert.deepEqual(result.errors, [])
+})

@@ -1,7 +1,9 @@
 <script setup>
-import { onMounted, ref, useId } from 'vue'
+import { onMounted, onUnmounted, ref, useId } from 'vue'
 import { BOT_CHECK_HINT } from '../../../src/bot-checks.js'
-import { getBotChecks, markBotChecksSeen } from '../api.js'
+import { sweepPrompt } from '../../../src/sweep.js'
+import { getBotChecks, getSweep, markBotChecksSeen } from '../api.js'
+import { copyText } from '../clipboard.js'
 import { formatDateTime } from '../format.js'
 import { whoLabel } from '../who.js'
 import AppIcon from './AppIcon.vue'
@@ -10,7 +12,10 @@ import SourceLink from './SourceLink.vue'
 const checks = ref([])
 const busy = ref(false)
 const problem = ref(null)
+const copied = ref(false)
 const headingId = useId()
+const COPIED_MS = 2000
+let resetTimer = null
 
 const load = async () => {
   try {
@@ -33,6 +38,20 @@ const markSeen = async () => {
   }
 }
 
+const copySweep = async () => {
+  problem.value = null
+  try {
+    const { items } = await getSweep()
+    const prompt = sweepPrompt({ items, dashboardUrl: window.location.origin })
+    if (!await copyText(prompt)) throw new Error('Copy failed. Run the sweep command instead.')
+    copied.value = true
+    clearTimeout(resetTimer)
+    resetTimer = setTimeout(() => { copied.value = false }, COPIED_MS)
+  } catch (error) {
+    problem.value = error.message
+  }
+}
+
 const sourcesHref = ({ itemId }) => `#/item/${encodeURIComponent(itemId)}/sources`
 
 const siteLabel = ({ kind, name }) => (kind === 'direct' ? `${name} free check` : name)
@@ -40,6 +59,7 @@ const siteLabel = ({ kind, name }) => (kind === 'direct' ? `${name} free check` 
 const rowKey = ({ itemId, kind, key }) => `${itemId}:${kind}:${key}`
 
 onMounted(load)
+onUnmounted(() => clearTimeout(resetTimer))
 </script>
 
 <template>
@@ -67,6 +87,9 @@ onMounted(load)
     <div class="notice-actions">
       <button class="btn secondary small" type="button" :disabled="busy" @click="markSeen">
         Got it
+      </button>
+      <button class="btn secondary small" type="button" @click="copySweep">
+        {{ copied ? 'Copied' : 'Copy Chrome sweep prompt' }}
       </button>
       <span v-if="problem" class="problem" role="alert">{{ problem }}</span>
     </div>
