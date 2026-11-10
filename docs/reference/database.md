@@ -27,6 +27,7 @@ All state lives in one SQLite file, `state/price-tracker.db`. Set `DB_PATH` to u
 | `claude_usage`  | Claude usage readings, kept for `90` days                                        |
 | `feedback`      | feedback on alerts and dismissed suggestions                                     |
 | `settings`      | Settings page overrides and some app state                                       |
+| `screenshots`   | screenshots of Chrome checks; the image files are in `state/screenshots`         |
 
 ### Tables: runs
 
@@ -69,6 +70,10 @@ Each row keeps `retailer`, `title`, `category`, `part`, `price`, `effective_pric
 ### Tables: feedback
 
 Each row has a `reason`, a `note`, the name in `by_name`, the `item_version`, and `changes_json`. Alert feedback uses `not-this-model`, `not-this-product`, `price-too-high`, or `not-now`. Suggestion rows use `suggestion-dismissed` or `suggestion-restored`. A **Got it** on the bot-check notice writes `bot-check-seen` with `changes_json` `{ kind, key, blockedAt }`; see [Bot checks](/reference/research-contract#bot-checks).
+
+### Tables: screenshots
+
+Each row has the `run_id` and `item_id` of a Chrome check, the `file` path under `state/screenshots` (`<run id>/<id>.<ext>`), the `content_type`, the size in `bytes`, and `created_at`. The index `screenshots_run` is on `run_id`. After each upload, the app deletes the oldest rows and their files until the total `bytes` fit `SCREENSHOT_CAP_MB`. Deleting an item deletes its rows and files.
 
 ## Currency migration
 
@@ -123,4 +128,4 @@ sqlite3 state/price-tracker.db "
 
 ## Backups
 
-Stop the app before you copy the database. Copy `state/price-tracker.db` together with any `price-tracker.db-wal` and `price-tracker.db-shm` files beside it. With Docker, run `./stop.sh` first and `./start.sh` after.
+Stop the app before you copy the database. Copy `state/price-tracker.db` together with any `price-tracker.db-wal` and `price-tracker.db-shm` files beside it. Copy `state/screenshots` too to keep the screenshots. With Docker, run `./stop.sh` first and `./start.sh` after.

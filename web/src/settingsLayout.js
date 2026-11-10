@@ -30,6 +30,13 @@ export const SETTING_GROUPS = [
     keys: ['currency', 'locale', 'timeZone']
   },
   {
+    id: 'storage',
+    title: 'Storage',
+    icon: 'image',
+    description: 'How much space screenshots from Chrome checks can use.',
+    keys: ['screenshotCapMb']
+  },
+  {
     id: 'about',
     title: 'About',
     icon: 'info',
@@ -56,6 +63,8 @@ export const SETTING_EFFECTS = {
     + 'the dashboard change at once; alerts use the new list from the next check.',
   currency: 'New prices are recorded and shown in this currency. Prices already recorded keep '
     + 'their old currency, and caps are not converted. Reload the dashboard after saving.',
+  screenshotCapMb: 'When screenshots pass this size, the oldest are deleted after the next '
+    + 'upload until they fit.',
   locale: 'Prices and dates use this format. Reload the dashboard after saving.',
   timeZone: 'Days, pauses, and new schedules use this time zone. Existing schedules keep '
     + 'their own time zone. Reload the dashboard after saving.'

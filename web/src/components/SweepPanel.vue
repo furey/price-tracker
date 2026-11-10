@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, useId } from 'vue'
 import { parseSweepReply, sweepPrompt } from '../../../src/sweep.js'
-import { getSweep, recordObservations } from '../api.js'
+import { getSweep, recordObservations, uploadScreenshot } from '../api.js'
 import { copyText } from '../clipboard.js'
+import { imageFiles, shrinkScreenshot } from '../screenshotImage.js'
 import AppIcon from './AppIcon.vue'
 import ModalSheet from './ModalSheet.vue'
+import ScreenshotThumbs from './ScreenshotThumbs.vue'
 
 const COPIED_MS = 2000
 
@@ -15,6 +17,7 @@ const recording = ref(false)
 const reply = ref('')
 const busy = ref(false)
 const outcomes = ref([])
+const pasteRunId = ref(null)
 const headingId = useId()
 const replyId = useId()
 let resetTimer = null
@@ -48,12 +51,54 @@ const copyPrompt = async () => {
 const openRecording = () => {
   reply.value = ''
   outcomes.value = []
+  pasteRunId.value = null
   recording.value = true
+  document.addEventListener('paste', onPaste)
 }
 
 const closeRecording = async () => {
   recording.value = false
+  document.removeEventListener('paste', onPaste)
   if (outcomes.value.some(({ ok }) => ok)) await load()
+}
+
+const recordedRuns = computed(() => outcomes.value.filter(({ runId }) => runId))
+
+const pasteTarget = computed(() => recordedRuns.value
+  .find(({ runId }) => runId === pasteRunId.value) ?? recordedRuns.value.at(-1) ?? null)
+
+const onPaste = (event) => {
+  const files = imageFiles(event.clipboardData?.items)
+  if (!files.length || !pasteTarget.value) return
+  event.preventDefault()
+  addScreenshots({ outcome: pasteTarget.value, files })
+}
+
+const onPick = ({ outcome, event }) => {
+  const files = [...event.target.files]
+  event.target.value = ''
+  addScreenshots({ outcome, files })
+}
+
+const addScreenshots = async ({ outcome, files }) => {
+  pasteRunId.value = outcome.runId
+  for (const file of files) await uploadOne({ outcome, file })
+}
+
+const uploadOne = async ({ outcome, file }) => {
+  outcome.uploads.push({ key: `${Date.now()}-${outcome.uploads.length}`, name: file.name,
+    state: 'Shrinking' })
+  const upload = outcome.uploads.at(-1)
+  try {
+    const blob = await shrinkScreenshot(file)
+    upload.state = 'Uploading'
+    const saved = await uploadScreenshot({ runId: outcome.runId, blob })
+    upload.state = `Saved (${Math.ceil(saved.bytes / 1024)} KB)`
+    outcome.screenshots.push({ id: saved.id })
+  } catch (error) {
+    upload.state = `Failed: ${error.message}`
+    upload.failed = true
+  }
 }
 
 const record = async () => {
@@ -68,9 +113,9 @@ const record = async () => {
 const recordOne = async ({ itemId, data }) => {
   const name = itemNames.value.get(itemId) ?? itemId
   try {
-    const { listingCount, qualifiedCount } = await recordObservations({ id: itemId, data })
+    const { runId, listingCount, qualifiedCount } = await recordObservations({ id: itemId, data })
     const text = `${name}: recorded ${listingCount} listings, ${qualifiedCount} qualify.`
-    return { ok: true, text }
+    return { ok: true, text, runId, name, uploads: [], screenshots: [] }
   } catch (error) {
     const detail = error.errors?.length ? ` ${error.errors.join('; ')}` : ''
     return { ok: false, text: `${name}: ${error.message}${detail}` }
@@ -78,7 +123,10 @@ const recordOne = async ({ itemId, data }) => {
 }
 
 onMounted(load)
-onUnmounted(() => clearTimeout(resetTimer))
+onUnmounted(() => {
+  clearTimeout(resetTimer)
+  document.removeEventListener('paste', onPaste)
+})
 </script>
 
 <template>
@@ -116,8 +164,43 @@ onUnmounted(() => clearTimeout(resetTimer))
     <ul v-if="outcomes.length" class="outcomes" role="status">
       <li v-for="outcome in outcomes" :key="outcome.text" :class="outcome.ok ? 'good' : 'bad'">
         {{ outcome.text }}
+        <div v-if="outcome.runId" class="shots">
+          <div class="shot-actions">
+            <label class="btn secondary small file-pick">
+              Add screenshots
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                class="visually-hidden"
+                @change="onPick({ outcome, event: $event })"
+              />
+            </label>
+            <button
+              class="btn secondary small"
+              type="button"
+              :aria-pressed="pasteTarget?.runId === outcome.runId ? 'true' : 'false'"
+              @click="pasteRunId = outcome.runId"
+            >
+              {{ pasteTarget?.runId === outcome.runId ? 'Pasted images go here' : 'Paste here' }}
+            </button>
+          </div>
+          <ul v-if="outcome.uploads.length" class="uploads">
+            <li v-for="upload in outcome.uploads" :key="upload.key" :class="{ bad: upload.failed }">
+              {{ upload.name || 'Pasted image' }}: {{ upload.state }}
+            </li>
+          </ul>
+          <ScreenshotThumbs
+            :screenshots="outcome.screenshots"
+            :label="`${outcome.name}, Chrome check`"
+          />
+        </div>
       </li>
     </ul>
+    <p v-if="recordedRuns.length" class="muted paste-hint">
+      Paste an image with Ctrl+V or Cmd+V to add it to the chosen check. Images are shrunk to
+      1600 px wide before upload.
+    </p>
     <template #actions>
       <button class="btn secondary" type="button" @click="closeRecording">Close</button>
       <button class="btn" type="button" :disabled="busy || !reply.trim()" @click="record">
@@ -178,6 +261,43 @@ onUnmounted(() => clearTimeout(resetTimer))
   margin: var(--space-3) 0 0;
   padding-left: var(--space-4);
   font-size: var(--text-small);
+  text-wrap: pretty;
+}
+
+.shots {
+  margin: var(--space-2) 0 var(--space-3);
+  color: var(--ink);
+}
+
+.shot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.file-pick {
+  cursor: pointer;
+}
+
+.file-pick:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.uploads {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+  color: var(--ink-2);
+  font-size: var(--text-caption);
+}
+
+.uploads .bad {
+  color: var(--bad);
+}
+
+.paste-hint {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-caption);
   text-wrap: pretty;
 }
 

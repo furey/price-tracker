@@ -119,6 +119,14 @@ export const recordObservations = ({ id, data }) => sendJson({
   url: `/api/items/${encodeURIComponent(id)}/observations`, method: 'POST', body: data, raw: true
 })
 
+export const uploadScreenshot = ({ runId, blob }) => request(`/api/runs/${runId}/screenshots`, {
+  method: 'POST',
+  headers: { 'content-type': blob.type },
+  body: blob
+})
+
+export const screenshotUrl = (id) => `/api/screenshots/${id}`
+
 export const markBotChecksSeen = ({ checks, by }) =>
   sendJson({ url: '/api/bot-checks/seen', method: 'POST', body: { checks, by }, raw: true })
 

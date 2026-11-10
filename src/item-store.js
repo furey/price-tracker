@@ -188,6 +188,7 @@ export const deleteItem = ({ db, id, confirm, now = new Date() }) => {
   if (confirm !== id) throw invalid([`confirm: type the item id "${id}" to delete it`])
   const params = { id }
   return inTransaction(db, () => {
+    db.prepare('DELETE FROM screenshots WHERE item_id = :id').run(params)
     const removed = {
       alerts: changes(db.prepare('DELETE FROM alerts WHERE item_id = :id').run(params)),
       listings: changes(db.prepare('DELETE FROM listings WHERE item_id = :id').run(params)),

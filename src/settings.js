@@ -6,6 +6,9 @@ import {
   defaultMemberships, formatMemberships, parseMemberships, validateMemberships
 } from './memberships.js'
 import { regionProfile } from './regions/index.js'
+import {
+  DEFAULT_SCREENSHOT_CAP_MB, MAX_SCREENSHOT_CAP_MB, MIN_SCREENSHOT_CAP_MB
+} from './screenshots.js'
 
 const DEFAULT_TOKEN_ENV = 'NTFY_ACCESS_TOKEN'
 const TOKEN_ENV_PATTERN = /^NTFY_[A-Z0-9_]*$/
@@ -32,7 +35,7 @@ export class SettingsError extends Error {
 export const SETTING_KEYS = [
   'ntfyToken', 'claudeOauthToken', 'deliveryPostcode', 'deliverySuburb', 'aiMonthlyCap',
   'claudeReservePercent', 'claudeSessionReservePercent', 'aiPaused', 'appTopic', 'memberships',
-  'dashboardUrl', 'currency', 'locale', 'timeZone'
+  'dashboardUrl', 'currency', 'locale', 'timeZone', 'screenshotCapMb'
 ]
 
 export const resolveSettings = ({ db, env = process.env, item }) => {
@@ -125,6 +128,9 @@ export const claudeToken = ({ db, env = process.env }) =>
 
 export const aiMonthlyCap = ({ db, env = process.env }) =>
   Number(resolveSettings({ db, env }).aiMonthlyCap.value)
+
+export const screenshotCapMb = ({ db, env = process.env }) =>
+  Number(resolveSettings({ db, env }).screenshotCapMb.value)
 
 export const claudeLimits = ({ db, env = process.env }) => {
   const resolved = resolveSettings({ db, env })
@@ -296,6 +302,19 @@ const DEFINITIONS = {
     validate: (value) => (['true', 'false'].includes(value.toLowerCase())
       ? null
       : 'must be true or false')
+  },
+  screenshotCapMb: {
+    label: 'Screenshot storage cap (MB)',
+    secret: false,
+    envName: () => 'SCREENSHOT_CAP_MB',
+    defaultValue: String(DEFAULT_SCREENSHOT_CAP_MB),
+    validate: (value) => {
+      const number = Number(value)
+      return /^\d+$/.test(value) && number >= MIN_SCREENSHOT_CAP_MB
+        && number <= MAX_SCREENSHOT_CAP_MB
+        ? null
+        : `must be a whole number from ${MIN_SCREENSHOT_CAP_MB} to ${MAX_SCREENSHOT_CAP_MB}`
+    }
   },
   appTopic: {
     label: 'App ntfy topic',

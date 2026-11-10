@@ -4,6 +4,7 @@ import { getObservations } from '../api.js'
 import {
   formatFullDay, formatMoney, formatTime, sourceLabel, timeZoneLabel
 } from '../format.js'
+import ScreenshotThumbs from './ScreenshotThumbs.vue'
 
 const props = defineProps({
   itemId: { type: String, required: true },
@@ -14,6 +15,7 @@ const props = defineProps({
 const emit = defineEmits(['close'])
 
 const observations = ref([])
+const screenshots = ref({})
 const loading = ref(true)
 const errorMessage = ref(null)
 const closeButton = ref(null)
@@ -22,6 +24,19 @@ const sorted = computed(() =>
   [...observations.value].sort((a, b) => rank(a) - rank(b) || price(a) - price(b)
     || a.checkedAt.localeCompare(b.checkedAt))
 )
+
+const shotGroups = computed(() => Object.entries(screenshots.value).map(([runId, shots]) => {
+  const rows = observations.value.filter((row) => String(row.runId) === runId)
+  const retailers = [...new Set(rows.map((row) => row.retailer))].join(', ')
+  const at = rows[0] ? formatTime(rows[0].checkedAt) : ''
+  return {
+    runId,
+    shots,
+    at,
+    retailers,
+    label: [retailers, formatFullDay(props.day), at].filter(Boolean).join(', ')
+  }
+}))
 
 const rank = (row) => (row.category === 'reject' || row.inStock === false ? 1 : 0)
 
@@ -39,6 +54,7 @@ const load = async () => {
   try {
     const result = await getObservations({ id: props.itemId, day: props.day })
     observations.value = result.observations
+    screenshots.value = result.screenshots ?? {}
   } catch (error) {
     errorMessage.value = error.message
   } finally {
@@ -84,7 +100,15 @@ watch(() => props.day, load)
       <p v-else-if="errorMessage" class="banner bad" role="alert">{{ errorMessage }}</p>
       <p v-else-if="!observations.length" class="muted">No observations on this day.</p>
 
-      <ul v-else class="list">
+      <section v-if="!loading && shotGroups.length" class="shot-groups" aria-label="Screenshots">
+        <div v-for="group in shotGroups" :key="group.runId" class="shot-group">
+          <p class="label">Chrome check screenshots at {{ group.at }}</p>
+          <p class="muted small">{{ group.retailers }}</p>
+          <ScreenshotThumbs :screenshots="group.shots" :label="group.label" />
+        </div>
+      </section>
+
+      <ul v-if="!loading && !errorMessage && observations.length" class="list">
         <li v-for="row in sorted" :key="row.id" class="obs" :class="{ dim: rank(row) === 1 }">
           <div class="top">
             <div>
@@ -192,6 +216,19 @@ h2 {
 .count {
   margin: 0;
   font-size: var(--text-small);
+}
+
+.shot-groups {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.shot-group {
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
 }
 
 .list {

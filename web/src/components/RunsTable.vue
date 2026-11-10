@@ -1,10 +1,17 @@
 <script setup>
 import { formatCost, formatDateTime } from '../format.js'
 import { timeOf, useSort } from '../useSort.js'
+import ScreenshotThumbs from './ScreenshotThumbs.vue'
 import SortHeader from './SortHeader.vue'
 import StatusPill from './StatusPill.vue'
 
-const props = defineProps({ runs: { type: Array, default: () => [] } })
+const props = defineProps({
+  runs: { type: Array, default: () => [] },
+  itemName: { type: String, default: '' }
+})
+
+const shotLabel = (run) => [props.itemName, 'Chrome check', formatDateTime(run.startedAt)]
+  .filter(Boolean).join(', ')
 
 const triggerLabels = { tick: 'Scheduled', manual: 'Manual', 'dry-run': 'Test run' }
 
@@ -47,7 +54,14 @@ const sort = useSort({
               {{ run.error }}
             </small>
           </td>
-          <td>{{ triggerLabels[run.trigger] ?? run.trigger }}</td>
+          <td>
+            {{ triggerLabels[run.trigger] ?? run.trigger }}
+            <ScreenshotThumbs
+              v-if="run.screenshots?.length"
+              :screenshots="run.screenshots"
+              :label="shotLabel(run)"
+            />
+          </td>
           <td class="num right">{{ run.listingCount ?? '-' }}</td>
           <td class="num right">{{ run.qualifiedCount ?? '-' }}</td>
           <td class="num right">{{ formatCost(run.costUsd) }}</td>

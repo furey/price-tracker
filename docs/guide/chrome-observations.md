@@ -58,6 +58,27 @@ The prompt tells Claude to read each page at a normal pace, to stop at a CAPTCHA
 
 Claude ends its reply with one JSON block per item, each with an `itemId`. **Record** sends each block to `POST /api/items/<id>/observations` and shows what it recorded for each item, or what to fix. Each item becomes one Chrome check: it sends no alert, and it clears the **Bot check** mark. Without the dashboard, save a block (minus `itemId`) as a file and use the `record` command below.
 
+## Screenshots
+
+You can keep screenshots of the pages you checked with a Chrome check. They show what the page said at the time.
+
+1. Record the results as above.
+2. Press **Add screenshots** on the line of the item, and pick one or more images.
+3. Or copy an image, then paste it with `Ctrl+V` or `Cmd+V` while the sheet is open. The image goes to the last item you recorded, or to the item where you pressed **Paste here**.
+
+The browser shrinks each image to `1600` px wide and saves it as WebP (or JPEG when the browser cannot make WebP). Each line shows the progress of each image, and small previews of the saved images.
+
+The screenshots show in **Recent runs** on the item page, and in the day view of the price chart. Press a preview to open the full image in a new tab.
+
+Limits:
+
+- Only Chrome checks take screenshots.
+- Each image can be up to `2 MB`, in PNG, JPEG, or WebP.
+- A Chrome check can have up to `20` screenshots.
+- All screenshots together can use up to `200 MB`. Change this with **Screenshot storage cap** in **Settings**, or `SCREENSHOT_CAP_MB` in `.env`. After an upload that passes the cap, the app deletes the oldest screenshots until they fit.
+
+The files are in `state/screenshots`. Deleting an item deletes its screenshots.
+
 ## Write the file
 
 Write the prices in a JSON file with the same shape as an AI research result: the check time, the sources you checked, and the listings you found.
@@ -118,4 +139,4 @@ The command checks the file, records the prices as a new run, and prints the dec
 
 ## From a script
 
-`POST /api/items/<id>/observations` takes the same JSON and records it the same way. It needs a signed-in session and a same-origin JSON request, like the other changes the dashboard makes. See [HTTP API](/reference/http-api).
+`POST /api/items/<id>/observations` takes the same JSON and records it the same way. It needs a signed-in session and a same-origin JSON request, like the other changes the dashboard makes. It returns the `runId`. To add a screenshot, send the image to `POST /api/runs/<runId>/screenshots`. See [HTTP API](/reference/http-api#screenshots).

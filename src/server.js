@@ -24,6 +24,10 @@ import { claudeUsageView } from './claude-usage-view.js'
 import { addBotCheckRoutes } from './bot-check-routes.js'
 import { addDraftRoutes } from './draft-routes.js'
 import { addSuggestionRoutes } from './suggestion-routes.js'
+import { addScreenshotRoutes, isScreenshotUpload, withScreenshots } from './screenshot-routes.js'
+import {
+  SCREENSHOT_DIR, removeRunFolders, screenshotRunsForItem, screenshotsByRun
+} from './screenshot-store.js'
 import { monthlyRuns } from './draft-schedule.js'
 import { sendAppTestNotice } from './app-notice.js'
 import { deliver as deliverAlert, sendNtfy } from './notify.js'
@@ -66,7 +70,8 @@ export const createApp = ({
   pauseMs,
   distDir = join(PROJECT_ROOT, 'web', 'dist'),
   allowedHosts = parseAllowedHosts(env.ALLOWED_HOSTS),
-  auth = createAuth({ env, now })
+  auth = createAuth({ env, now }),
+  screenshotDir = SCREENSHOT_DIR
 }) => {
   const app = express()
   app.disable('x-powered-by')
@@ -86,7 +91,8 @@ export const createApp = ({
     res.json(getItems().map((record) => describeItem({ db, record, now: now() })))
   })
 
-  addManageRoutes({ app, db, now, findRecord, fetchImpl, env })
+  addManageRoutes({ app, db, now, findRecord, fetchImpl, env, screenshotDir })
+  addScreenshotRoutes({ app, db, now, env, dir: screenshotDir })
   addDraftRoutes({
     app, db, now, worker, claudeLockPath, fetchImpl, lookupImpl, deliver, env, sleep, pauseMs
   })
@@ -124,7 +130,8 @@ export const createApp = ({
     const day = String(req.query.day ?? '')
     if (!DAY_PATTERN.test(day)) return res.status(400).json({ error: 'day must be YYYY-MM-DD' })
     const tz = itemTz({ item, db })
-    res.json({ day, observations: dayListings({ db, itemId: item.id, day, tz }) })
+    const observations = dayListings({ db, itemId: item.id, day, tz })
+    res.json({ day, observations, screenshots: manualScreenshots({ db, observations }) })
   })
 
   app.post('/api/items/:id/observations', async (req, res) => {
@@ -148,13 +155,15 @@ export const createApp = ({
   app.get('/api/items/:id/runs', (req, res) => {
     const item = findItem(req.params.id)
     if (!item) return notFound(res, 'item')
-    res.json(recentRuns({ db, itemId: item.id, limit: intParam(req.query.limit, 20, 200) }))
+    const runs = recentRuns({ db, itemId: item.id, limit: intParam(req.query.limit, 20, 200) })
+    res.json(withScreenshots({ db, runs }))
   })
 
   app.get('/api/runs/:id', (req, res) => {
     const run = getRun({ db, id: intParam(req.params.id, -1, Number.MAX_SAFE_INTEGER) })
     if (!run) return notFound(res, 'run')
-    res.json({ ...run, listings: runListings({ db, runId: run.id }) })
+    const [described] = withScreenshots({ db, runs: [run] })
+    res.json({ ...described, listings: runListings({ db, runId: run.id }) })
   })
 
   app.get('/api/alerts/:id', (req, res) => {
@@ -300,7 +309,7 @@ const ITEM_ERROR_STATUS = { 'not-found': 404, conflict: 409, invalid: 400, state
 const LOWEST_DAYS = 90
 const DIRECT_TEST_SCHEDULE = { cron: '0 0 * * *', tz: DEFAULT_REGION.timeZone }
 
-const addManageRoutes = ({ app, db, now, findRecord, fetchImpl, env }) => {
+const addManageRoutes = ({ app, db, now, findRecord, fetchImpl, env, screenshotDir }) => {
   const guarded = (handler) => async (req, res) => {
     try {
       await handler(req, res)
@@ -332,7 +341,9 @@ const addManageRoutes = ({ app, db, now, findRecord, fetchImpl, env }) => {
   }))
 
   app.delete('/api/items/:id', guarded((req, res) => {
+    const runIds = screenshotRunsForItem({ db, itemId: id(req) })
     const removed = deleteItem({ db, id: id(req), confirm: req.body?.confirm, now: now() })
+    removeRunFolders({ dir: screenshotDir, runIds })
     res.json({ deleted: true, removed })
   }))
 
@@ -527,7 +538,7 @@ const guardStateChanges = (allowedHosts) => (req, res, next) => {
   if (req.headers.origin !== undefined && !isOwnOrigin({ req, allowedHosts })) {
     return forbidden(res, 'Cross-origin request rejected')
   }
-  if (!req.is('application/json')) {
+  if (!req.is('application/json') && !isScreenshotUpload(req)) {
     return res.status(415).json({ error: 'Content-Type must be application/json' })
   }
   next()
@@ -608,6 +619,14 @@ const isPlainObject = (value) =>
   value !== null && typeof value === 'object' && !Array.isArray(value)
 
 const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+const manualScreenshots = ({ db, observations }) => {
+  const runIds = [...new Set(observations
+    .filter((row) => row.source === 'manual')
+    .map((row) => row.runId))]
+  const byRun = screenshotsByRun({ db, runIds })
+  return Object.fromEntries([...byRun].filter(([, shots]) => shots.length > 0))
+}
 
 const itemTz = ({ item, db }) => item.schedules?.[0]?.tz ?? activeRegion({ db }).timeZone
 

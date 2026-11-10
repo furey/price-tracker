@@ -6,7 +6,7 @@ description: Every row on the Settings page, what it does, and how a saved value
 
 # Settings
 
-Open **Settings** at the top of the dashboard. The rows sit in groups: **Phone alerts**, **Claude and AI**, **Shopping**, **Region**, and **About**. Press a row to open it.
+Open **Settings** at the top of the dashboard. The rows sit in groups: **Phone alerts**, **Claude and AI**, **Shopping**, **Region**, **Storage**, and **About**. Press a row to open it.
 
 ## Overrides and `.env`
 
@@ -62,6 +62,12 @@ The **Region** group sets how prices, numbers, and dates look, and the time zone
 | **Time zone**              | The time zone for "today", the day each price counts for, pauses, and new schedules, such as `America/Chicago`. Existing schedules keep their own time zone.                                             | `TIME_ZONE` |
 
 Reload the dashboard after you save a Region row. `REGION` itself has no row; set it in `.env` and restart the app.
+
+## Storage
+
+| Row                             | What it does                                                                                                                                                                                                                                                   | Variable            |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| **Screenshot storage cap (MB)** | The most space that screenshots of Chrome checks can use, in MB. A whole number from `10` to `5000`. The default is `200`. After an upload that passes the cap, the oldest screenshots are deleted. See [Screenshots](/guide/chrome-observations#screenshots). | `SCREENSHOT_CAP_MB` |
 
 ## About
 

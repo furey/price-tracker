@@ -14,7 +14,7 @@ Every request under `/api` passes these checks, in order:
 
 1. **Host**: the `Host` header must be `localhost` or `127.0.0.1` (any port), or a value in `ALLOWED_HOSTS`. Otherwise: `403 Host not allowed`.
 2. **Origin**: for a method other than `GET`, `HEAD`, and `OPTIONS`, an `Origin` header (when present) must be the server's own origin. For `localhost`, the Vite dev server on port `5173` also counts. Otherwise: `403 Cross-origin request rejected`.
-3. **Content type**: for the same methods, the request must have `Content-Type: application/json`, even with no body. Otherwise: `415`.
+3. **Content type**: for the same methods, the request must have `Content-Type: application/json`, even with no body. A screenshot upload takes `image/png`, `image/jpeg`, or `image/webp` instead. Otherwise: `415`.
 4. **Session**: when `APP_PASSWORD` is set, every route except `/api/session`, `/api/login`, and `/api/logout` needs a valid session cookie. Otherwise: `401 Login required`.
 
 A body may be up to `2 MB`. An error response is `{ "error": "<message>" }`, sometimes with an `errors` list. An unknown route under `/api` returns `404 Unknown endpoint`. A server fault returns `500 Internal server error` with no detail.
@@ -67,8 +67,8 @@ Pause, resume, archive, and restore return the item as `GET /api/items` describe
 | `POST` | `/api/items/:id/test-notify`   | sends a test alert; `{ delivered, tokenWithheld }`                                                                                     |
 | `POST` | `/api/items/:id/direct/test`   | body `{ entry }`; fetches one direct entry and returns its listings, with nothing stored                                               |
 | `POST` | `/api/items/:id/observations`  | body is a [research reply](/reference/research-contract#the-reply); stores a manual run; `201 { runId, listingCount, qualifiedCount }` |
-| `GET`  | `/api/items/:id/runs?limit=20` | recent runs; `limit` up to `200`                                                                                                       |
-| `GET`  | `/api/runs/:id`                | one run with its listings                                                                                                              |
+| `GET`  | `/api/items/:id/runs?limit=20` | recent runs, each with `screenshotCount` and `screenshots`; `limit` up to `200`                                                        |
+| `GET`  | `/api/runs/:id`                | one run with its listings and `screenshots: [{ id, bytes, createdAt }]`                                                                |
 
 `POST /run` returns `409` when:
 
@@ -78,15 +78,39 @@ Pause, resume, archive, and restore return the item as `GET /api/items` describe
 - `claude.lock` is held (`AI busy: <job>`)
 - the Claude usage guard holds AI runs and `runAnyway` is not `true`; the body adds a `guard` object
 
+## Screenshots
+
+| Method | Path                        | Notes                                                                                                                           |
+| ------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `POST` | `/api/runs/:id/screenshots` | body is the image bytes, with `Content-Type` `image/png`, `image/jpeg`, or `image/webp`; `201 { id, bytes, createdAt, pruned }` |
+| `GET`  | `/api/screenshots/:id`      | the image, with its content type                                                                                                |
+
+An upload is checked in this order:
+
+- an unknown run: `404`
+- a run that is not a Chrome check (mode `manual`): `409`
+- bytes that are not the declared image type: `415`
+- a run that has `20` screenshots already: `409`
+- a body over `2 MB`: `413`
+
+After it stores the file, the server deletes the oldest screenshots until all of them fit the cap (`SCREENSHOT_CAP_MB`, default `200`). `pruned` lists the deleted ids.
+
+`GET /api/screenshots/:id` sends `X-Content-Type-Options: nosniff`, `Content-Security-Policy: default-src 'none'`, and `Cache-Control: private, max-age=86400`.
+
+```bash
+curl -s -b jar -X POST http://127.0.0.1:4280/api/runs/42/screenshots \
+  -H 'Content-Type: image/png' --data-binary @page.png
+```
+
 ## History and alerts
 
-| Method | Path                                         | Notes                                                                                                  |
-| ------ | -------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `GET`  | `/api/items/:id/history?days=30`             | `{ daily, listings }`; `daily` is the lowest price per retailer, category, and day; `days` up to `365` |
-| `GET`  | `/api/items/:id/insights?days=90`            | `series`, `bestDays`, `dealWindows`, `priceChanges`, `retailers`, and `kits`; `days` up to `730`       |
-| `GET`  | `/api/items/:id/observations?day=YYYY-MM-DD` | every listing seen that day in the item's time zone                                                    |
-| `GET`  | `/api/alerts?itemId=&limit=50`               | recent alerts; `limit` up to `500`                                                                     |
-| `GET`  | `/api/alerts/:id`                            | the alert with its listing, evidence, rule, rank, dedupe check, and run sources                        |
+| Method | Path                                         | Notes                                                                                                        |
+| ------ | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `GET`  | `/api/items/:id/history?days=30`             | `{ daily, listings }`; `daily` is the lowest price per retailer, category, and day; `days` up to `365`       |
+| `GET`  | `/api/items/:id/insights?days=90`            | `series`, `bestDays`, `dealWindows`, `priceChanges`, `retailers`, and `kits`; `days` up to `730`             |
+| `GET`  | `/api/items/:id/observations?day=YYYY-MM-DD` | every listing seen that day in the item's time zone, and `screenshots` of that day's Chrome checks by run id |
+| `GET`  | `/api/alerts?itemId=&limit=50`               | recent alerts; `limit` up to `500`                                                                           |
+| `GET`  | `/api/alerts/:id`                            | the alert with its listing, evidence, rule, rank, dedupe check, and run sources                              |
 
 ## Tuning and feedback
 

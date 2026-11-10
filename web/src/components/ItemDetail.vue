@@ -753,7 +753,7 @@ watch(() => props.focus, scrollToFocus)
             :summary="runSummary"
             :force-open="focus === 'runs'"
           >
-            <RunsTable :runs="runs" />
+            <RunsTable :runs="runs" :item-name="meta.name" />
           </FoldSection>
         </div>
         <div v-if="loaded.runs && !hasRuns" class="empty no-runs">

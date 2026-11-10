@@ -170,6 +170,16 @@ CREATE TABLE IF NOT EXISTS feedback (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS feedback_item ON feedback (item_id, created_at);
+CREATE TABLE IF NOT EXISTS screenshots (
+  id INTEGER PRIMARY KEY,
+  run_id INTEGER NOT NULL REFERENCES runs (id),
+  item_id TEXT NOT NULL,
+  file TEXT NOT NULL,
+  content_type TEXT NOT NULL,
+  bytes INTEGER NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS screenshots_run ON screenshots (run_id);
 `
 
 export const openDb = (path = DB_PATH) => {
