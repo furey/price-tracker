@@ -48,7 +48,7 @@ Restoring an old version of the item keeps your current tuning, unless you tick 
 
 ## Suggestions
 
-![Tuning, with a suggestion to review an alert price](/screenshots/tuning-suggestions.png)
+![Suggestions and muted, with a suggestion to review an alert price](/screenshots/tuning-suggestions.png)
 
 The app looks at the last 30 days of checks and suggests changes with fixed rules. Each suggestion shows its evidence with the numbers. No suggestion applies itself.
 
