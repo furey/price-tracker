@@ -65,8 +65,9 @@ const RULES = [
   'Never try to get past a block. If I do not solve it, mark the source blocked.',
   'Record only what the page shows. Never guess a price or a stock level.',
   'Close newsletter, cookie, and other pop-ups that cover the page, then carry on.',
-  'Never sign me up, subscribe, or enter my email. If a pop-up offers a discount for signing up,',
-  '  close it, put the offer and its terms in that source\'s note, and list it in your report.'
+  'Never sign me up, subscribe, or enter my email. If a pop-up offers a discount for '
+    + 'signing up,\n  close it, put the offer and its terms in that source\'s note, '
+    + 'and list it in your report.'
 ]
 
 const locationRules = ({ postcode, locality }) => [

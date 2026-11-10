@@ -58,6 +58,7 @@ test('the sweep prompt names each page, the categories, the rules, and the dashb
   assert.match(prompt, /Never try to get past a block/)
   assert.match(prompt, /Close newsletter, cookie, and other pop-ups/)
   assert.match(prompt, /Never sign me up/)
+  assert.equal(/^- {2,}/m.test(prompt), false)
   assert.match(prompt, /every sign-up discount you saw/)
   assert.match(prompt, /http:\/\/nas\.local:4280/)
   assert.match(prompt, /\/api\/items\/<item id>\/observations/)
