@@ -15,7 +15,7 @@ Each card shows:
 - the lowest price in the last 30 days, with a small trend line;
 - the last run;
 - the next AI check and the next free check;
-- the last alert.
+- the last alert (test alerts do not count).
 
 Press the item name to open [the item page](/guide/item-page).
 

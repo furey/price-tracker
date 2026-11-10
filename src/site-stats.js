@@ -56,13 +56,14 @@ export const categoryStats = ({
   const categoriesByVersion = new Map(versions.map(({ version, categoryIds }) => [
     version, new Set(categoryIds)
   ]))
+  const usefulByRun = new Map(inWindow.map((run) => [run, tunedUseful({ item, run, region })]))
   return item.categories.map(({ id }) => {
     const covering = inWindow.filter((run) => {
       const ids = categoriesByVersion.get(run.itemVersion)
       return !ids || ids.has(id)
     })
     const sightings = covering
-      .map((run) => ({ run, lowest: lowestIn({ item, run, category: id, region }) }))
+      .map((run) => ({ run, lowest: lowestIn({ listings: usefulByRun.get(run), category: id }) }))
       .filter(({ lowest }) => lowest !== null)
     const seen = covering.filter((run) => runListings(run)
       .some((listing) => listing.category === id)).length
@@ -74,7 +75,7 @@ export const categoryStats = ({
       sightingTimes: sightings.map(({ run }) => run.startedAt),
       lowest: sightings.length ? Math.min(...sightings.map(({ lowest }) => lowest)) : null,
       lowestRetailer: lowestRetailer({
-        item, runs: sightings.map(({ run }) => run), category: id, region
+        listings: sightings.flatMap(({ run }) => usefulByRun.get(run)), category: id
       })
     }
   })
@@ -217,19 +218,18 @@ const usefulListings = ({ item, listings, region }) => eligibleListings(listings
   .filter((listing) => !listing.tuned)
   .filter((listing) => listingTrust({ item, listing, region }).trusted)
 
-const lowestIn = ({ item, run, category, region }) => {
-  const prices = tunedUseful({ item, run, region })
+const lowestIn = ({ listings, category }) => {
+  const prices = listings
     .filter((listing) => listing.category === category)
     .map((listing) => listing.effectivePrice)
     .filter((price) => typeof price === 'number')
   return prices.length ? Math.min(...prices) : null
 }
 
-const lowestRetailer = ({ item, runs, category, region }) => {
-  const listings = runs.flatMap((run) => tunedUseful({ item, run, region }))
-    .filter((listing) => listing.category === category)
-  const best = listings.reduce((low, listing) =>
-    (!low || listing.effectivePrice < low.effectivePrice ? listing : low), null)
+const lowestRetailer = ({ listings, category }) => {
+  const best = listings.filter((listing) => listing.category === category)
+    .reduce((low, listing) =>
+      (!low || listing.effectivePrice < low.effectivePrice ? listing : low), null)
   return best?.retailer ?? null
 }
 

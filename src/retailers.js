@@ -47,6 +47,7 @@ export const retailerHomeUrl = ({ name, region = DEFAULT_REGION }) => {
 }
 
 export const hostOf = (url) => {
+  if (typeof url !== 'string' || !url) return null
   try {
     return new URL(url).hostname.toLowerCase().replace(/\.$/, '').replace(/^www\./, '') || null
   } catch {

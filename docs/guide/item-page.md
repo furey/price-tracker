@@ -1,7 +1,7 @@
 ---
 title: The item page
 icon: layout-dashboard
-description: Everything on an item page, from the lowest recent price and deal windows to the price chart, the latest listings, runs, alerts, and the evidence for each price.
+description: Everything on an item page, from the deal verdict and deal windows to the price chart, the latest listings, runs, alerts, and the evidence for each price.
 ---
 
 # The item page
@@ -21,10 +21,23 @@ Both runs ask you to confirm, and use about 7 to 10 minutes of Claude time. You 
 
 ## Summary
 
-- **Lowest recent**: the lowest effective price in the last 30 days, with its category and retailer.
-- **Last run**: the status of the last run, such as **OK**, **Failed**, or **Skipped**.
+The top line answers **Is there a deal now?**
+
+- **Deal now**: a deal window is live. The line names the category, the price, the retailer, and the day the deal started. Press **Open listing** to go to the retailer. The line has a green background.
+- **Under target**: a price from the last 7 days is at or under its alert price, but no deal window is live yet.
+- **No deal**: the best recent price in the category closest to its alert price, the alert price, and how far the price must still drop. For example: "No deal. Best base $1,769 at Temple & Webster, target $1,600. $169 to go".
+- **No recent prices**: no listing was seen in the last 7 days.
+
+The line uses each retailer's latest price from the last 7 days. It never uses a muted category. The target is the alert price, or the price under the RRP limit when that is higher.
+
+Under the top line:
+
+- **Last run**: the status of the last run, such as **OK**, **Failed**, or **Skipped**, and when it started.
 - **Next checks**: the time of the next **AI** check and the next **Free** check.
-- **Last alert**: when the last alert went out, and its kind.
+- **Last alert**: when the last alert went out, and its kind. Test alerts do not count.
+- **Needs attention**: blocked sources and bot checks, open tuning suggestions, and a failed last run. Each one links to the section that deals with it. **Nothing** means all is well.
+
+Each part shows **Loading** until its data arrives.
 
 Under the summary, **Checks** lists the AI research schedule in words, in your time zone. The label names the zone, for example **Checks (Sydney time)**.
 

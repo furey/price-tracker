@@ -33,7 +33,8 @@ const itemId = computed(() => {
 
 const alertId = computed(() => alertRoute(hash.value)?.alertId ?? null)
 
-const focus = computed(() => (/^#\/item\/[^/?]+\/sources/.test(hash.value) ? 'sources' : null))
+const focus = computed(() => hash.value.match(/^#\/item\/[^/?]+\/(sources|tuning|runs)\b/)?.[1]
+  ?? null)
 
 const isEdit = computed(() => /^#\/item\/[^/?]+\/edit/.test(hash.value))
 

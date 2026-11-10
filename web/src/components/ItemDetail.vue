@@ -6,6 +6,7 @@ import {
   getRun,
   getRuns,
   getItems,
+  getSiteStats,
   restoreItem,
   resumeItem,
   sendFeedback,
@@ -13,6 +14,7 @@ import {
   tuneItem
 } from '../api.js'
 import { applyTuningChanges } from '../../../src/tuning.js'
+import { itemVerdict } from '../../../src/verdict.js'
 import { tuningChanges, tuningSummary } from '../tuningView.js'
 import { whoLabel } from '../who.js'
 import {
@@ -27,7 +29,7 @@ import { aiHoldNote, nextChecks } from '../nextChecks.js'
 import { busiestCategory } from '../insightsView.js'
 import FoldSection from './FoldSection.vue'
 import PauseButton from './PauseButton.vue'
-import StatusPill from './StatusPill.vue'
+import ItemSummary from './ItemSummary.vue'
 import PriceChart from './PriceChart.vue'
 import DealWindows from './DealWindows.vue'
 import LowestEver from './LowestEver.vue'
@@ -55,6 +57,11 @@ const props = defineProps({
 
 const DAY_OPTIONS = [30, 90, 365]
 const ENDED_WINDOW_LIMIT = 6
+const HEALTH_STATS_DAYS = 30
+const BLOCKED_STATUSES = ['blocked']
+const NOTHING_LOADED = {
+  insights: false, runs: false, latestRun: false, alerts: false, stats: false, suggestions: false
+}
 const POLL_MS = 5000
 const POLL_AFTER_START_MS = 45000
 
@@ -80,6 +87,7 @@ const tuneError = ref(null)
 const statsKey = ref(0)
 const botCheckSites = ref([])
 const siteLinks = ref({})
+const loaded = ref(NOTHING_LOADED)
 const otherLinks = ref({})
 let pollTimer = null
 
@@ -87,14 +95,32 @@ const isRunning = computed(() => runs.value.some((run) => run.status === 'runnin
 
 const lastRunRow = computed(() => runs.value[0] ?? null)
 
-const lowestNow = computed(() => {
-  const lowest = meta.value?.lowestRecent
-  if (typeof lowest === 'number') return { price: lowest, retailer: null }
-  if (!lowest) return null
-  return {
-    price: lowest.effectivePrice ?? lowest.lowest,
-    where: [lowest.category, lowest.retailer].filter(Boolean).join(', ')
-  }
+const verdict = computed(() => {
+  if (!loaded.value.insights || !meta.value) return null
+  return itemVerdict({
+    item: meta.value,
+    dealWindows: insights.value.dealWindows,
+    retailers: insights.value.retailers
+  })
+})
+
+const itemHref = (focusName) => `#/item/${encodeURIComponent(props.itemId)}/${focusName}`
+
+const blockedSources = computed(() => new Set([
+  ...botCheckSites.value,
+  ...sources.value.filter(({ status }) => BLOCKED_STATUSES.includes(status)).map(({ name }) => name)
+]))
+
+const attention = computed(() => {
+  const { runs: runsDone, stats, suggestions } = loaded.value
+  if (!runsDone || !stats || !suggestions) return null
+  const blocked = blockedSources.value.size
+  const suggestionCount = suggestionState.report.value?.suggestions?.length ?? 0
+  return [
+    blocked && { key: 'sources', text: `${plural(blocked, 'source')} blocked` },
+    suggestionCount && { key: 'tuning', text: plural(suggestionCount, 'tuning suggestion') },
+    lastRunRow.value?.status === 'failed' && { key: 'runs', text: 'Last run failed' }
+  ].filter(Boolean).map((entry) => ({ ...entry, href: itemHref(entry.key) }))
 })
 
 const research = computed(() => latestRun.value?.research ?? null)
@@ -158,6 +184,7 @@ const retailerSummary = computed(() => {
 })
 
 const changeSummary = computed(() => {
+  if (!loaded.value.insights) return 'Loading'
   const [latest] = insights.value.priceChanges
   if (!latest) return 'None in this range'
   const move = latest.direction === 'drop' ? 'down' : 'up'
@@ -166,12 +193,14 @@ const changeSummary = computed(() => {
 })
 
 const listingSummary = computed(() => {
+  if (!loaded.value.latestRun) return 'Loading'
   if (!listings.value.length) return 'None from the latest run'
   const qualified = latestRun.value?.decision?.qualified?.length ?? 0
   return `${plural(listings.value.length, 'listing')}, ${qualified} qualify`
 })
 
 const sourceSummary = computed(() => {
+  if (!loaded.value.latestRun) return 'Loading'
   const counts = sources.value.reduce((total, { status }) => ({
     ...total, [status]: (total[status] ?? 0) + 1
   }), {})
@@ -190,6 +219,7 @@ const sourceSummary = computed(() => {
 
 const tuningText = computed(() => {
   if (!meta.value) return ''
+  if (!loaded.value.suggestions) return 'Loading'
   const count = suggestionState.report.value?.suggestions?.length ?? 0
   const muted = tuningSummary(meta.value)
   return count ? `${plural(count, 'suggestion')}, ${muted.toLowerCase()}` : muted
@@ -272,13 +302,16 @@ const runSummary = computed(() => {
 })
 
 const alertSummary = computed(() => {
-  const [last] = alerts.value
-  if (!last) return 'None sent yet'
+  if (!loaded.value.alerts) return 'Loading'
+  if (!alerts.value.length) return 'None sent yet'
+  const last = alerts.value.find(({ kind }) => kind !== 'test')
+  if (!last) return plural(alerts.value.length, 'test alert')
   return `${plural(alerts.value.length, 'alert')}, last ${formatDateTime(last.sentAt)}`
 })
 
 const load = async () => {
   loading.value = true
+  loaded.value = NOTHING_LOADED
   errorMessage.value = null
   try {
     await refresh()
@@ -296,16 +329,43 @@ const refresh = async () => {
   notFound.value = !found
   if (!found) return
   meta.value = found
-  const [insightData, runList, alertList] = await Promise.all([
-    getInsights({ id: props.itemId, days: days.value }),
-    getRuns({ id: props.itemId }),
-    getAlerts({ itemId: props.itemId })
-  ])
-  insights.value = insightData
-  runs.value = runList
-  alerts.value = alertList
   statsKey.value += 1
-  await Promise.all([loadLatestRun(), suggestionState.load()])
+  await Promise.all([
+    loadInsights(), loadRuns(), loadAlerts(), loadSiteStats(), loadSuggestions()
+  ])
+}
+
+const markLoaded = (part) => {
+  loaded.value = { ...loaded.value, [part]: true }
+}
+
+const loadInsights = async () => {
+  insights.value = await getInsights({ id: props.itemId, days: days.value })
+  markLoaded('insights')
+}
+
+const loadRuns = async () => {
+  runs.value = await getRuns({ id: props.itemId })
+  markLoaded('runs')
+  await loadLatestRun()
+  markLoaded('latestRun')
+}
+
+const loadAlerts = async () => {
+  alerts.value = await getAlerts({ itemId: props.itemId })
+  markLoaded('alerts')
+}
+
+const loadSiteStats = async () => {
+  const stats = await getSiteStats({ id: props.itemId, days: HEALTH_STATS_DAYS })
+    .catch(() => null)
+  keepBotChecks(stats)
+  markLoaded('stats')
+}
+
+const loadSuggestions = async () => {
+  await suggestionState.load()
+  markLoaded('suggestions')
 }
 
 const loadLatestRun = async () => {
@@ -426,7 +486,7 @@ const keepBotChecks = (stats) => {
   otherLinks.value = linksByName((stats?.sites ?? []).filter(({ kind }) => kind === 'other'))
 }
 
-const SECTION_IDS = { sources: 'item-sources' }
+const SECTION_IDS = { sources: 'item-sources', tuning: 'item-tuning', runs: 'item-runs' }
 
 const scrollToFocus = async () => {
   const id = SECTION_IDS[props.focus]
@@ -549,40 +609,14 @@ watch(() => props.itemId, load)
         @tune="requestTune"
       />
 
-      <section class="summary card" aria-label="Status summary">
-        <div class="stat">
-          <span class="label">Lowest recent</span>
-          <template v-if="lowestNow">
-            <span class="num big">{{ formatMoney(lowestNow.price) }}</span>
-            <span class="muted small">{{ lowestNow.where || 'last 30 days' }}</span>
-          </template>
-          <span v-else class="muted">No prices yet</span>
-        </div>
-        <div class="stat">
-          <span class="label">Last run</span>
-          <template v-if="lastRunRow">
-            <StatusPill :status="lastRunRow.status" />
-            <span class="num small">{{ formatDateTime(lastRunRow.startedAt) }}</span>
-          </template>
-          <span v-else class="muted">Never</span>
-        </div>
-        <div class="stat">
-          <span class="label">Next checks</span>
-          <span v-for="check in checks" :key="check.label" class="check-line small">
-            <span class="check-kind">{{ check.short }}</span>
-            <span :class="{ num: check.time, muted: check.muted }">{{ check.text }}</span>
-            <span v-if="check.detail" class="muted">{{ check.detail }}</span>
-          </span>
-        </div>
-        <div class="stat">
-          <span class="label">Last alert</span>
-          <template v-if="meta.lastAlert">
-            <span class="num small">{{ formatDateTime(meta.lastAlert.sentAt) }}</span>
-            <span class="muted small">{{ meta.lastAlert.kind }}</span>
-          </template>
-          <span v-else class="muted">None</span>
-        </div>
-      </section>
+      <ItemSummary
+        :verdict="verdict"
+        :last-run="lastRunRow"
+        :runs-loaded="loaded.runs"
+        :checks="checks"
+        :last-alert="meta.lastAlert"
+        :attention="attention"
+      />
 
       <p v-if="scheduleText.length" class="schedules muted">
         <span>Checks ({{ timeZoneLabel() }}):</span>
@@ -594,7 +628,8 @@ watch(() => props.itemId, load)
           <h2>Deal windows</h2>
           <span class="muted small">Days when a listing met your rules</span>
         </header>
-        <DealWindows :windows="visibleWindows" @open-day="showDay" />
+        <DealWindows v-if="loaded.insights" :windows="visibleWindows" @open-day="showDay" />
+        <p v-else class="muted loading-note">Loading</p>
         <p v-if="hiddenWindowCount" class="muted small more">
           {{ hiddenWindowCount }} older ended windows not shown.
         </p>
@@ -627,7 +662,9 @@ watch(() => props.itemId, load)
             </button>
           </div>
         </header>
+        <p v-if="!loaded.insights" class="muted loading-note">Loading</p>
         <PriceChart
+          v-else
           v-model:show-muted="showMuted"
           :daily="insights.series"
           :rules="meta.rules"
@@ -637,7 +674,13 @@ watch(() => props.itemId, load)
       </section>
 
       <div class="folds">
-        <FoldSection name="item-tuning" title="Tuning" :summary="tuningText">
+        <FoldSection
+          id="item-tuning"
+          name="item-tuning"
+          title="Tuning"
+          :summary="tuningText"
+          :force-open="focus === 'tuning'"
+        >
           <TuningSuggestions
             :report="suggestionState.report.value"
             :busy="suggestionState.busy.value"
@@ -657,7 +700,7 @@ watch(() => props.itemId, load)
           :summary="sourceSummary"
           :force-open="focus === 'sources'"
         >
-          <SiteStatsTable :item-id="itemId" :refresh-key="statsKey" @loaded="keepBotChecks" />
+          <SiteStatsTable :item-id="itemId" :refresh-key="statsKey" />
           <p class="fold-note muted">
             Statuses from the latest successful run. Muting a site stops the AI visiting it;
             a listing from it found another way can still alert.
@@ -714,7 +757,13 @@ watch(() => props.itemId, load)
             </div>
           </FoldSection>
 
-          <FoldSection name="item-runs" title="Recent runs" :summary="runSummary">
+          <FoldSection
+            id="item-runs"
+            name="item-runs"
+            title="Recent runs"
+            :summary="runSummary"
+            :force-open="focus === 'runs'"
+          >
             <RunsTable :runs="runs" />
           </FoldSection>
         </template>
@@ -726,6 +775,7 @@ watch(() => props.itemId, load)
           :force-open="Boolean(alertId)"
         >
           <AlertsList v-if="alerts.length" :alerts="alerts" />
+          <p v-else-if="!loaded.alerts" class="muted loading-note">Loading</p>
           <div v-else class="empty">
             <p>No alerts sent for this item yet.</p>
           </div>
@@ -741,7 +791,7 @@ watch(() => props.itemId, load)
         </FoldSection>
       </div>
 
-      <div v-if="!hasRuns" class="empty section">
+      <div v-if="loaded.runs && !hasRuns" class="empty section">
         <h2>No runs yet</h2>
         <p>Run a dry run to check prices without saving history or sending alerts.</p>
         <button class="btn" type="button" :disabled="launching !== null" @click="launch(true)">
@@ -812,54 +862,9 @@ watch(() => props.itemId, load)
   text-decoration: none;
 }
 
-.summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-top: var(--space-5);
-  overflow: hidden;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-4);
-  border-left: 1px solid var(--rule);
-}
-
-.stat:first-child {
-  border-left: 0;
-}
-
 .crumb {
   display: inline-block;
   margin-bottom: var(--space-1);
-}
-
-.check-line {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--space-2);
-}
-
-.check-kind {
-  color: var(--ink-2);
-  font-weight: 600;
-}
-
-.label {
-  font-size: var(--text-label);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--ink-3);
-}
-
-.big {
-  font-size: var(--text-figure);
-  font-weight: 600;
-  line-height: 1.1;
 }
 
 .small {
@@ -883,16 +888,9 @@ watch(() => props.itemId, load)
   margin: var(--space-2) 0 0;
 }
 
-@media (max-width: 720px) {
-  .summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .stat:nth-child(3) {
-    border-left: 0;
-  }
-  .stat:nth-child(n + 3) {
-    border-top: 1px solid var(--rule);
-  }
+.loading-note {
+  margin: 0;
+  font-size: var(--text-small);
 }
 
 @media (max-width: 560px) {

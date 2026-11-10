@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
-  canonicalRetailer, knownRetailersFor, listingTrust, normaliseListings, sellerNote
+  canonicalRetailer, hostOf, knownRetailersFor, listingTrust, normaliseListings, sellerNote
 } from '../src/retailers.js'
 
 const knownRetailers = [
@@ -119,4 +119,12 @@ test('listingTrust flags a known retailer name on another host, even a trusted o
 test('listingTrust refuses a listing without a parseable URL', () => {
   assert.equal(trustOf('Bunnings', 'not a url').trusted, false)
   assert.equal(trustOf('Bunnings', null).host, null)
+})
+
+test('hostOf returns null for a missing or broken address without throwing', () => {
+  assert.equal(hostOf(undefined), null)
+  assert.equal(hostOf(''), null)
+  assert.equal(hostOf(42), null)
+  assert.equal(hostOf('not a url'), null)
+  assert.equal(hostOf('https://www.Bunnings.com.au/x'), 'bunnings.com.au')
 })

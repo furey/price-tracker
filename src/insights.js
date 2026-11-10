@@ -244,6 +244,7 @@ const summarise = ({ keyRows, days }) => {
     retailer: latest.retailer,
     category: latest.category,
     latest: latest.effectivePrice,
+    latestIsClearance: Boolean(latest.isClearance),
     latestDeliveryCost: latest.deliveryCost ?? null,
     latestDelivered: deliveredTotal(latest),
     lowest: Math.min(...prices),

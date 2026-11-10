@@ -151,6 +151,17 @@ test('undelivered alerts are stored with delivered 0 and surface in lastAlert', 
   assert.equal(recentAlerts({ db, itemId: 'other', limit: 5 }).length, 0)
 })
 
+test('lastAlert skips test alerts', () => {
+  const db = openDb(':memory:')
+  insertAlert({ db, itemId: ITEM, kind: 'deal', sentAt: '2026-11-01T00:00:00Z', delivered: true })
+  insertAlert({ db, itemId: ITEM, kind: 'test', sentAt: '2026-11-02T00:00:00Z', delivered: true })
+  assert.equal(lastAlert({ db, itemId: ITEM }).kind, 'deal')
+  insertAlert({
+    db, itemId: 'other', kind: 'test', sentAt: '2026-11-02T00:00:00Z', delivered: true
+  })
+  assert.equal(lastAlert({ db, itemId: 'other' }), null)
+})
+
 test('hasHeartbeatThisMonth compares calendar months in the given tz', () => {
   const db = openDb(':memory:')
   insertAlert({ db, itemId: ITEM, kind: 'heartbeat', sentAt: '2026-10-31T14:30:00.000Z',

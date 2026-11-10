@@ -401,7 +401,8 @@ export const lastRun = ({ db, itemId }) => {
 
 export const lastAlert = ({ db, itemId }) => {
   const row = db.prepare(`
-    SELECT * FROM alerts WHERE item_id = :itemId ORDER BY sent_at DESC, id DESC LIMIT 1`)
+    SELECT * FROM alerts WHERE item_id = :itemId AND kind != 'test'
+    ORDER BY sent_at DESC, id DESC LIMIT 1`)
     .get({ itemId })
   return row ? toAlert(row) : null
 }

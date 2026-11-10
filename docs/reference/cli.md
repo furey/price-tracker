@@ -30,17 +30,17 @@ node src/cli.js record springfree-medium-oval chrome-2026-11-07.json
 
 ## Items
 
-| Command                           | Does                                                                                                                       |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `status`                          | prints, per item: status, version, last run, last success and next slot for research and for direct checks, and last alert |
-| `history <id> [--days 30]`        | prints a table of the lowest price per retailer, category, and day                                                         |
-| `pause <id> [--until YYYY-MM-DD]` | pauses scheduled checks; with `--until`, they resume at midnight on that day, in the time zone of the install              |
-| `resume <id>`                     | resumes scheduled checks                                                                                                   |
-| `export <id>`                     | prints the current config JSON, ready to save as a seed file                                                               |
-| `test-notify <id>`                | sends a test alert to the item's ntfy topic                                                                                |
-| `rotate-topics`                   | gives every item a new random ntfy topic (as a new version) and gives the app a new topic                                  |
-| `pin-seeds`                       | marks the current seed files as applied, so a changed seed stops logging a warning; the items do not change                |
-| `normalise`                       | rewrites stored retailer names in `listings` and `alerts` to the canonical names, and prints the counts                    |
+| Command                           | Does                                                                                                                                                  |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `status`                          | prints, per item: status, version, last run, last success and next slot for research and for direct checks, and last alert (not counting test alerts) |
+| `history <id> [--days 30]`        | prints a table of the lowest price per retailer, category, and day                                                                                    |
+| `pause <id> [--until YYYY-MM-DD]` | pauses scheduled checks; with `--until`, they resume at midnight on that day, in the time zone of the install                                         |
+| `resume <id>`                     | resumes scheduled checks                                                                                                                              |
+| `export <id>`                     | prints the current config JSON, ready to save as a seed file                                                                                          |
+| `test-notify <id>`                | sends a test alert to the item's ntfy topic                                                                                                           |
+| `rotate-topics`                   | gives every item a new random ntfy topic (as a new version) and gives the app a new topic                                                             |
+| `pin-seeds`                       | marks the current seed files as applied, so a changed seed stops logging a warning; the items do not change                                           |
+| `normalise`                       | rewrites stored retailer names in `listings` and `alerts` to the canonical names, and prints the counts                                               |
 
 ```bash
 node src/cli.js history karcher-k7 --days 14
