@@ -17,7 +17,7 @@ Type what you want in **What do you want to track?**. Tap the microphone on your
 The other fields are optional:
 
 - **Budget**, with **Around this** or **Hard limit**. A hard limit caps every alert price.
-- **Need by**: the date you need the product.
+- **Need by**: the date you need the product. Checks stop 6 days before it, to allow for delivery, and 3 days before that the app sends one last-chance alert. See [Last chance](/guide/alerts#alert-kinds-last-chance).
 - **How many**: the quantity.
 - **Must-haves**: type a feature and press **Add**.
 - **Links you already found (optional)**: product pages you found yourself. Press **+ Paste another link** for more.

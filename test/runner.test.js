@@ -295,6 +295,23 @@ test('monthly heartbeat is sent once per calendar month', async () => {
   assert.equal(deps.calls.deliver[0].title, 'Karcher K7 still tracking')
 })
 
+test('a last-chance alert goes once, on the first run in its window, at any price', async () => {
+  const db = openDb(':memory:')
+  const deps = makeDeps({ listings: [listing({ price: 1300, effectivePrice: 1300 })] })
+  const item = withoutHeartbeat({ deadline: { needBy: '2026-11-20', lastChanceDays: 3 } })
+  const run = (now) => runItem({ item, now, db, deps })
+  await run(new Date('2026-11-09T22:00:00.000Z'))
+  assert.deepEqual(kinds(db), [])
+  await run(new Date('2026-11-10T22:00:00.000Z'))
+  assert.deepEqual(kinds(db), ['last-chance'])
+  await run(new Date('2026-11-11T22:00:00.000Z'))
+  assert.deepEqual(kinds(db), ['last-chance'])
+  const [alert] = deps.calls.deliver
+  assert.equal(alert.title, 'Karcher K7 last chance')
+  assert.match(alert.message, /Lowest in-stock price: \$1,300 at Bunnings/)
+  assert.match(alert.click, /#\/item\/k7\/alert\/|alert/)
+})
+
 const runnable = (...items) => items.map((item) => ({ item, version: 1 }))
 
 const makeLockPath = async () => join(await mkdtemp(join(tmpdir(), 'tick-')), 'tick.lock')

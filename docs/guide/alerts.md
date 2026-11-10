@@ -43,6 +43,7 @@ A test message opens the Settings page when you tap it.
 | Check this listing | A listing meets your rules, but its site is not known or its price is too low to be likely | Low (`2`)     | The alert page, with no **Open listing** button        |
 | Muted price notice | A muted model or hidden product drops below the price you set                              | Default (`3`) | The alert page, plus **Open listing** for a known site |
 | Still tracking     | Once a month, on the first AI research run of the month, when **Monthly heartbeat** is on  | Low (`2`)     | The item page                                          |
+| Last chance        | Once, on the first check in the last-chance days before a need-by date                     | High (`4`)    | The alert page, plus an **Open listing** button        |
 | Test               | You press a test button, or you save a new item                                            | Default (`3`) | The Settings page                                      |
 
 The diagram shows how one listing becomes one of these alerts, or none. The rules are in [Deciding and alerting](/reference/decisions).
@@ -77,6 +78,10 @@ When you mute a model with **Not what I want**, you can tick **Tell me if it dro
 ### Alert kinds: monthly heartbeat
 
 The heartbeat tells you the item still works when there is no deal. It gives the lowest price seen, the number of listings that qualified, any sources that failed, and a line on what you muted.
+
+### Alert kinds: last chance
+
+An item with a **Need by** date sends one last-chance alert. It comes on the first check that runs a set number of days (default `3`) before checks stop, and checks stop a set number of days (default `6`) before the need-by date, to allow for delivery. The alert gives the lowest in-stock price in the best category you have not muted, whatever your alert price, so you can buy in time. When nothing is in stock, it says so. Change the dates on the edit page, under **Alert prices**.
 
 ## App notices
 

@@ -62,13 +62,14 @@ Dedupe keys on the retailer (trimmed, lower case) and the category. A listing pa
 
 ## Alert kinds
 
-| Kind        | When                                                                                        | Priority | Opens                                                         |
-| ----------- | ------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------- |
-| `deal`      | the best qualified listing passes dedupe                                                    | `4`      | the alert page; an "Open listing" button goes to the retailer |
-| `check`     | a qualified listing failed a listing check                                                  | `2`      | the alert page                                                |
-| `muted`     | a muted listing is at or below its `notifyBelow` price                                      | `3`      | the alert page                                                |
-| `heartbeat` | the first successful research run of the calendar month, when `heartbeat.monthly` is `true` | `2`      | the item page                                                 |
-| `test`      | `test-notify`, or "Send test notification" on the Settings page                             | `3`      | the Settings page                                             |
+| Kind          | When                                                                                                                                               | Priority | Opens                                                           |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------- |
+| `deal`        | the best qualified listing passes dedupe                                                                                                           | `4`      | the alert page; an "Open listing" button goes to the retailer   |
+| `check`       | a qualified listing failed a listing check                                                                                                         | `2`      | the alert page                                                  |
+| `muted`       | a muted listing is at or below its `notifyBelow` price                                                                                             | `3`      | the alert page                                                  |
+| `heartbeat`   | the first successful research run of the calendar month, when `heartbeat.monthly` is `true`                                                        | `2`      | the item page                                                   |
+| `last-chance` | the first successful non-manual run on or after `deadline.needBy` less `deliveryDays` and `lastChanceDays`, and before `needBy`; once per deadline | `4`      | the alert page; an "Open listing" button for a trusted retailer |
+| `test`        | `test-notify`, or "Send test notification" on the Settings page                                                                                    | `3`      | the Settings page                                               |
 
 The `muted` and `check` kinds have their own dedupe history, so they never block a deal alert. Manual runs never send alerts. Dry runs show the messages without sending them.
 

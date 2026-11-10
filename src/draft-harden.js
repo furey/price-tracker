@@ -1,4 +1,6 @@
 import { randomBytes } from 'node:crypto'
+import { DEFAULT_LAST_CHANCE_DAYS } from './last-chance.js'
+import { DEFAULT_DELIVERY_DAYS } from './draft-schedule.js'
 import { topicName } from './topics.js'
 import { publicUrl as sharedPublicUrl } from './url-rules.js'
 import { validateResearch } from './validate.js'
@@ -202,6 +204,13 @@ export const assembleConfig = ({
     config.direct = direct
     config.directSchedules = directSchedules
   }
+  if (input?.needBy) {
+    config.deadline = {
+      needBy: input.needBy,
+      deliveryDays: DEFAULT_DELIVERY_DAYS,
+      lastChanceDays: DEFAULT_LAST_CHANCE_DAYS
+    }
+  }
   return config
 }
 
@@ -245,7 +254,7 @@ const CONTROL_CHARS_KEEP_NEWLINE =
 
 const KNOWN_KEYS = [
   'id', 'name', 'product', 'categories', 'rules', 'sources', 'schedules', 'direct',
-  'directSchedules', 'ntfy', 'research', 'dedupe', 'heartbeat', 'kits'
+  'directSchedules', 'ntfy', 'research', 'dedupe', 'heartbeat', 'kits', 'deadline'
 ]
 
 const parseQuestions = (value) => {

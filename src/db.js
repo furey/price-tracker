@@ -14,7 +14,7 @@ export const DRAFT_STATUSES = [
 
 const quoteList = (values) => values.map((value) => `'${value}'`).join(', ')
 const VERSION_SOURCES = quoteList(['seed', 'edit', 'import', 'wizard', 'tune'])
-const ALERT_KINDS = quoteList(['deal', 'heartbeat', 'test', 'muted', 'check'])
+const ALERT_KINDS = quoteList(['deal', 'heartbeat', 'test', 'muted', 'check', 'last-chance'])
 const DRAFT_STATUS_LIST = quoteList(DRAFT_STATUSES)
 const RUN_STATUS_LIST = quoteList(['running', 'ok', 'failed', 'skipped'])
 
@@ -407,6 +407,11 @@ export const lastAlert = ({ db, itemId }) => {
   return row ? toAlert(row) : null
 }
 
+export const hasAlertSince = ({ db, itemId, kind, since }) => Boolean(db.prepare(`
+  SELECT 1 FROM alerts
+  WHERE item_id = :itemId AND kind = :kind AND delivered = 1 AND sent_at >= :since
+  LIMIT 1`).get({ itemId, kind, since }))
+
 export const hasHeartbeatThisMonth = ({ db, itemId, now, tz }) => {
   const rows = db.prepare(`
     SELECT sent_at FROM alerts
@@ -648,7 +653,7 @@ const migrateListingTuned = (db) => {
 const migrateAlertKinds = (db) => {
   const { sql } = db.prepare(`
     SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'alerts'`).get()
-  if (sql.includes("'check'")) return
+  if (sql.includes("'last-chance'")) return
   rebuildTable({ db, table: 'alerts', indexes: [
     'CREATE INDEX IF NOT EXISTS alerts_item_sent ON alerts (item_id, sent_at)'
   ] })

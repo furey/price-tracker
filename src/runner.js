@@ -1,7 +1,8 @@
 import { dirname, join } from 'node:path'
 import { STATE_DIR } from './config.js'
 import {
-  failStaleRuns, finishRun, hasHeartbeatThisMonth, insertAlert, insertListings, lastAlertsFor,
+  failStaleRuns, finishRun, hasAlertSince, hasHeartbeatThisMonth, insertAlert, insertListings,
+  lastAlertsFor,
   lastFailedRunAt, lastSkippedAt, lastSuccessAt, recentSiteNames, recordSkippedRun, startRun,
   updateAlertDelivery
 } from './db.js'
@@ -10,6 +11,10 @@ import {
 } from './decide.js'
 import { runDirectCheck } from './direct.js'
 import { KIT_SOURCE, kitPartIds } from './kits.js'
+import {
+  LAST_CHANCE_KIND, formatLastChanceMessage, lastChanceDate, lastChanceDue, lastChancePick
+} from './last-chance.js'
+import { addDays, localToday } from './draft-schedule.js'
 import { LockHeldError, withLock } from './lock.js'
 import { deliver as deliverAlert } from './notify.js'
 import { activeRegion } from './region.js'
@@ -328,9 +333,15 @@ const completeRun = async ({ context, result: collected }) => {
       failedSources: decision.failedSources,
       qualifiedCount: decision.qualified.length,
       region
+    }) : null,
+    lastChance: sendsAlerts && lastChanceDueFor({ context }) ? formatLastChanceMessage({
+      item,
+      listing: lastChancePick({ item, listings: decision.eligible }),
+      deadline: item.deadline,
+      region
     }) : null
   }
-  const delivery = { deal: null, check: null, muted: null, heartbeat: null }
+  const delivery = { deal: null, check: null, muted: null, heartbeat: null, lastChance: null }
   if (!dryRun) {
     const listings = markQualifying({ listings: result.data.listings, decision })
     insertListings({
@@ -373,6 +384,14 @@ const completeRun = async ({ context, result: collected }) => {
     if (messages.heartbeat) {
       delivery.heartbeat = await sendAndRecord({
         context, kind: 'heartbeat', alert: messages.heartbeat, listing: decision.lowest
+      })
+    }
+    if (messages.lastChance) {
+      delivery.lastChance = await sendAndRecord({
+        context,
+        kind: LAST_CHANCE_KIND,
+        alert: messages.lastChance,
+        listing: lastChancePick({ item, listings: decision.eligible })
       })
     }
   }
@@ -418,6 +437,14 @@ const heartbeatDue = ({ context }) => {
   return !hasHeartbeatThisMonth({ db, itemId: item.id, now, tz })
 }
 
+const lastChanceDueFor = ({ context }) => {
+  const { item, db, now, region } = context
+  const tz = item.schedules?.[0]?.tz ?? region.timeZone
+  if (!lastChanceDue({ deadline: item.deadline, today: localToday(now, tz) })) return false
+  const since = addDays(lastChanceDate(item.deadline), -1)
+  return !hasAlertSince({ db, itemId: item.id, kind: LAST_CHANCE_KIND, since })
+}
+
 const sendAndRecord = async ({ context, kind, alert, listing }) => {
   const { item, db, runId, now, deliver, log, region } = context
   const alertId = insertAlert({
@@ -452,7 +479,7 @@ const withDashboardLink = ({ alert, kind, alertId, listing, context }) => {
   if (kind === CHECK_KIND) {
     return { ...alert, click: alertLink({ dashboardUrl, itemId: item.id, alertId }) }
   }
-  if (kind === 'deal' || kind === MUTED_KIND) {
+  if (kind === 'deal' || kind === MUTED_KIND || kind === LAST_CHANCE_KIND) {
     const click = alertLink({ dashboardUrl, itemId: item.id, alertId })
     const trusted = listing && listingTrust({ item, listing, region }).trusted
     return trusted ? { ...alert, click, actions: listingActions(listing.url) } : { ...alert, click }

@@ -46,6 +46,7 @@ A save must name the version it started from (`baseVersion`). If another save ha
 | `sources`         | yes                        | see [Sources](#sources)                                                           |
 | `dedupe`          | no                         | `{ minDrop }`, a number of `0` or more; see [Dedupe](#dedupe)                     |
 | `heartbeat`       | no                         | `{ monthly }`, `true` or `false`                                                  |
+| `deadline`        | no                         | `{ needBy, deliveryDays, lastChanceDays }`; see [Deadline](#deadline)             |
 | `research`        | no                         | see [Research options](#research-options)                                         |
 | `tuning`          | no                         | see [Tuning](#tuning)                                                             |
 
@@ -65,6 +66,10 @@ A category `id` uses lowercase letters, digits, and hyphens, and must be unique.
 [Deciding and alerting](/reference/decisions#qualifying) shows how the code applies them.
 
 Prices in an item are plain numbers in the currency of the install (`AUD` for `au`, `USD` for `us`). The app does not convert them when the Currency setting changes.
+
+## Deadline
+
+`deadline.needBy` is a `YYYY-MM-DD` date. `deliveryDays` (default `6`, `0` to `60`) and `lastChanceDays` (default `3`, `1` to `30`) are whole numbers. The first successful scheduled run on or after `needBy` less both numbers, and before `needBy`, sends one `last-chance` alert with the lowest in-stock price in the first category that is not muted, whatever its rule. The wizard writes `deadline` from **Need by**. `deadline` does not change the schedules; the wizard sets each schedule's `until` to `needBy` less `deliveryDays`.
 
 ## Dedupe
 

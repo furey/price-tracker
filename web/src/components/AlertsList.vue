@@ -4,7 +4,8 @@ import { formatMoney, formatDateTime } from '../format.js'
 defineProps({ alerts: { type: Array, default: () => [] } })
 
 const kindLabels = {
-  deal: 'Deal', heartbeat: 'Heartbeat', test: 'Test', muted: 'Muted price', check: 'Check this'
+  deal: 'Deal', heartbeat: 'Heartbeat', test: 'Test', muted: 'Muted price', check: 'Check this',
+  'last-chance': 'Last chance'
 }
 
 const hasDetail = (alert) => ['deal', 'muted', 'check'].includes(alert.kind) && alert.itemId

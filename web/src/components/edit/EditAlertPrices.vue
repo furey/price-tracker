@@ -3,6 +3,8 @@ import { currencySymbol, formatDateTime, formatMoney } from '../../format.js'
 import { useInvalid } from '../../formContext.js'
 import { moveItem, setNumber } from '../../itemForm.js'
 import FieldError from './FieldError.vue'
+import { DEFAULT_DELIVERY_DAYS } from '../../../../src/draft-schedule.js'
+import { DEFAULT_LAST_CHANCE_DAYS } from '../../../../src/last-chance.js'
 
 const props = defineProps({
   config: { type: Object, required: true },
@@ -35,6 +37,24 @@ const setDrop = (value) => {
 
 const setHeartbeat = (value) => {
   props.config.heartbeat = { ...props.config.heartbeat, monthly: value }
+}
+
+const setNeedBy = (value) => {
+  if (!value) {
+    delete props.config.deadline
+    return
+  }
+  props.config.deadline = {
+    deliveryDays: DEFAULT_DELIVERY_DAYS,
+    lastChanceDays: DEFAULT_LAST_CHANCE_DAYS,
+    ...props.config.deadline,
+    needBy: value
+  }
+}
+
+const setDeadlineDays = ({ key, value }) => {
+  if (!props.config.deadline) return
+  setNumber({ target: props.config.deadline, key, value })
 }
 
 const fieldId = ({ id, key }) => `rule-${id}-${key}`
@@ -137,6 +157,54 @@ const fieldId = ({ id, key }) => `rule-${id}-${key}`
         </label>
         <FieldError path="heartbeat.monthly" />
       </div>
+      <div class="field">
+        <label for="edit-need-by">Need by</label>
+        <input
+          id="edit-need-by"
+          class="num"
+          type="date"
+          :value="config.deadline?.needBy ?? ''"
+          :aria-invalid="invalid('deadline.needBy')"
+          @input="setNeedBy($event.target.value)"
+        />
+        <p class="hint">Sends one last-chance alert with the lowest in-stock price, whatever the
+          alert price. Leave empty for no deadline. The schedules set when checks stop.</p>
+        <FieldError path="deadline.needBy" />
+      </div>
+      <template v-if="config.deadline">
+        <div class="field">
+          <label for="edit-delivery-days">Days to allow for delivery</label>
+          <input
+            id="edit-delivery-days"
+            class="num"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            max="60"
+            :value="config.deadline.deliveryDays ?? ''"
+            :aria-invalid="invalid('deadline.deliveryDays')"
+            @input="setDeadlineDays({ key: 'deliveryDays', value: $event.target.value })"
+          />
+          <FieldError path="deadline.deliveryDays" />
+        </div>
+        <div class="field">
+          <label for="edit-last-chance-days">Last-chance alert, days before that</label>
+          <input
+            id="edit-last-chance-days"
+            class="num"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="30"
+            :value="config.deadline.lastChanceDays ?? ''"
+            :aria-invalid="invalid('deadline.lastChanceDays')"
+            @input="setDeadlineDays({ key: 'lastChanceDays', value: $event.target.value })"
+          />
+          <p class="hint">The alert goes on the first check this many days before the need-by
+            date, less the delivery days.</p>
+          <FieldError path="deadline.lastChanceDays" />
+        </div>
+      </template>
     </div>
   </div>
 </template>

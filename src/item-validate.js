@@ -18,6 +18,7 @@ export const validateItem = (item, fileName = null) => {
     ...validateSources(item),
     ...validateDedupe(item),
     ...validateHeartbeat(item),
+    ...validateDeadline(item),
     ...validateResearchOptions(item),
     ...validateTuning(item)
   ]
@@ -274,6 +275,27 @@ const validateHeartbeat = (item) => {
     ? []
     : ['heartbeat.monthly: expected true or false']
 }
+
+const validateDeadline = (item) => {
+  const { deadline } = item
+  if (deadline === undefined || deadline === null) return []
+  if (!isObject(deadline)) return ['deadline: expected an object']
+  const errors = []
+  if (!isDayString(deadline.needBy)) errors.push('deadline.needBy: expected a YYYY-MM-DD date')
+  if (!isOptionalWhole({ value: deadline.deliveryDays, min: 0, max: 60 })) {
+    errors.push('deadline.deliveryDays: expected a whole number from 0 to 60')
+  }
+  if (!isOptionalWhole({ value: deadline.lastChanceDays, min: 1, max: 30 })) {
+    errors.push('deadline.lastChanceDays: expected a whole number from 1 to 30')
+  }
+  return errors
+}
+
+const isDayString = (value) => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+  && !Number.isNaN(Date.parse(`${value}T00:00:00Z`))
+
+const isOptionalWhole = ({ value, min, max }) => value === undefined || value === null
+  || (Number.isInteger(value) && value >= min && value <= max)
 
 const validateResearchOptions = (item) => {
   const options = item.research

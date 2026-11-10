@@ -51,7 +51,7 @@ Each row keeps `retailer`, `title`, `category`, `part`, `price`, `effective_pric
 
 ### Tables: alerts
 
-`kind` is `deal`, `heartbeat`, `test`, `muted`, or `check`. A deal row keeps the listing's `effective_price` and its `currency`. `delivered` is `0` until ntfy accepts the alert, and `error` holds the last delivery error. Only delivered `deal` rows count for dedupe.
+`kind` is `deal`, `heartbeat`, `test`, `muted`, `check`, or `last-chance`. A deal row keeps the listing's `effective_price` and its `currency`. `delivered` is `0` until ntfy accepts the alert, and `error` holds the last delivery error. Only delivered `deal` rows count for dedupe.
 
 ### Tables: items and versions
 

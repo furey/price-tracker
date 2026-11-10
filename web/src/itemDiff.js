@@ -45,7 +45,8 @@ export const describeChanges = ({ before, after, renames = {} }) => [
 
 const HANDLED_KEYS = new Set([
   'id', 'name', 'product', 'ntfy', 'schedules', 'directSchedules', 'categories', 'rules',
-  'dedupe', 'heartbeat', 'sources', 'direct', 'kits', 'research', 'enabled', 'tuning'
+  'dedupe', 'heartbeat', 'sources', 'direct', 'kits', 'research', 'enabled', 'tuning',
+  'deadline'
 ])
 
 const RULE_FIELDS = [
@@ -149,8 +150,19 @@ const alertOptionChanges = ({ before, after }) => [
     label: 'Monthly heartbeat',
     from: before.heartbeat?.monthly ? 'On' : 'Off',
     to: after.heartbeat?.monthly ? 'On' : 'Off'
+  }),
+  change({
+    section: 'Alert prices',
+    label: 'Need by',
+    from: describeDeadline(before.deadline),
+    to: describeDeadline(after.deadline)
   })
 ].filter(Boolean)
+
+const describeDeadline = (deadline) => (deadline?.needBy
+  ? `${deadline.needBy}, ${deadline.deliveryDays ?? 6} days delivery, `
+    + `last chance ${deadline.lastChanceDays ?? 3} days before`
+  : 'None')
 
 const listChanges = ({ section, before = [], after = [], keyOf, describe }) => {
   const beforeByKey = new Map((before ?? []).map((item) => [keyOf(item), item]))

@@ -6,7 +6,11 @@ import { buildSchedule, parseSchedule, presetProblem } from './schedulePresets.j
 export const SECTIONS = [
   { id: 'basics', label: 'Basics', prefixes: ['name', 'ntfy'] },
   { id: 'how-often', label: 'How often', prefixes: ['schedules', 'directSchedules'] },
-  { id: 'alert-prices', label: 'Alert prices', prefixes: ['rules', 'dedupe', 'heartbeat'] },
+  {
+    id: 'alert-prices',
+    label: 'Alert prices',
+    prefixes: ['rules', 'dedupe', 'heartbeat', 'deadline']
+  },
   { id: 'look-for', label: 'What to look for', prefixes: ['product', 'categories'] },
   { id: 'look-where', label: 'Where to look', prefixes: ['sources'] },
   { id: 'free-checks', label: 'Free checks', prefixes: ['direct'] },
