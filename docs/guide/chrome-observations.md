@@ -62,12 +62,20 @@ Claude ends its reply with one JSON block per item, each with an `itemId`. **Rec
 
 A Chrome check can keep screenshots of the pages it read. They show what the page said at the time.
 
-Claude in Chrome cannot save files, so a sweep run from the side panel records prices only. To capture screenshots as well, run the sweep with an agent that drives your Chrome and saves screenshots to disk, such as Claude Code with the Claude in Chrome tools:
+Claude in Chrome cannot save files, so a sweep run from the side panel records prices only.
 
-1. Get the blocked pages as JSON with `node src/cli.js sweep --json`.
-2. Check each page in Chrome under the same rules as the prompt, and save a screenshot of each page.
-3. Write the results for each item as a JSON file, and put its screenshots in one folder.
-4. Record each item with `node src/cli.js record <id> <file.json> --screenshots <folder>`.
+### Chrome sweep with Claude Code (optional)
+
+To capture screenshots as well, let Claude Code run the sweep. It drives your own Chrome with the Claude in Chrome tools, saves a screenshot of each page, and records the prices and screenshots in the app. You need Claude Code and the Claude in Chrome extension on the computer with Chrome, and a clone of this repository. The app itself does not need any of it.
+
+1. When the app runs somewhere else, such as Docker on a NAS, set `SWEEP_CLI` and `SWEEP_STATE` in `.env` in the clone. See `.env.example`. When the app runs from the clone, skip this step.
+2. Open Claude Code in the clone and type "run the sweep". The `chrome-sweep` skill in `.claude/skills` does the rest.
+3. Answer any CAPTCHA or Chrome pop-up that Claude asks about, or tell it to skip blocked sites.
+
+The skill uses two commands that also work by hand:
+
+- `node src/cli.js sweep --json` lists the blocked pages.
+- `node src/cli.js record <id> <file.json> --screenshots <folder>` records one item's results with the images in the folder.
 
 The `record` command takes PNG, JPEG, and WebP files from the folder, up to `2 MB` each and `20` per check. When a screenshot breaks a limit, the command records nothing and names the file.
 
