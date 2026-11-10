@@ -17,6 +17,8 @@ Each card shows:
 - the next AI check and the next free check;
 - the last alert (test alerts do not count).
 
+A green **Deal live** label beside the name means a deal window is live now: a listing in a category you watch still meets your rules. See [Deal windows](/guide/item-page#deal-windows).
+
 Press the item name to open [the item page](/guide/item-page).
 
 ## Parts of an item

@@ -11,7 +11,7 @@ import {
 import { lowestPerRetailerPerDay } from './decide.js'
 import { testDirectEntry } from './direct.js'
 import { alertDetail } from './alert-detail.js'
-import { buildInsights } from './insights.js'
+import { buildInsights, dealWindows, splitMuted } from './insights.js'
 import { lockHolder } from './lock.js'
 import {
   DIRECT_MODE, ObservationError, TICK_LOCK_PATH, claudeLockFor, recordObservation, schedulesFor,
@@ -41,6 +41,7 @@ import {
 } from './item-store.js'
 import { validateItem } from './item-validate.js'
 import { TREND_DAYS, headlinePrices } from './item-trend.js'
+import { hasLiveDeal } from './verdict.js'
 import { TuningError, applyTuningChanges, MAX_BY_LENGTH, MAX_REASON_LENGTH } from './tuning.js'
 
 export const DEFAULT_PORT = 4280
@@ -657,15 +658,28 @@ const nextDirectSlot = ({ item, now }) => {
 
 const isoNextSlot = ({ schedules, now }) => nextSlot({ schedules, now })?.toISOString() ?? null
 
-const recentPrices = ({ db, item, now }) =>
-  headlinePrices({ rows: usableRecentRows({ db, item, now }), item, tz: itemTz({ item, db }) })
+const recentPrices = ({ db, item, now }) => {
+  const rows = historyRows({ db, itemId: item.id, days: TREND_DAYS, now })
+  const tz = itemTz({ item, db })
+  return {
+    ...headlinePrices({ rows: usableRecentRows({ db, item, rows }), item, tz }),
+    dealLive: dealLiveFor({ db, item, rows, tz, now })
+  }
+}
 
-const usableRecentRows = ({ db, item, now }) => {
+const dealLiveFor = ({ db, item, rows, tz, now }) => hasLiveDeal({
+  item,
+  dealWindows: dealWindows({
+    rows: splitMuted({ rows, item }).live, item, tz, now,
+    rulesByVersion: rulesByVersion({ db, itemId: item.id })
+  })
+})
+
+const usableRecentRows = ({ db, item, rows }) => {
   const memberships = membershipsFrom(resolveSettings({ db, item }))
   const itemCategories = new Set(item.categories.map((category) => category.id))
-  const rows = historyRows({ db, itemId: item.id, days: TREND_DAYS, now })
-    .filter((row) => itemCategories.has(row.category))
-  return gateByMemberships({ listings: rows, memberships, region: activeRegion({ db }) })
+  const inItem = rows.filter((row) => itemCategories.has(row.category))
+  return gateByMemberships({ listings: inItem, memberships, region: activeRegion({ db }) })
     .filter((row) => row.category !== 'reject')
 }
 

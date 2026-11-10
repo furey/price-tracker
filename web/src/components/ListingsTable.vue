@@ -126,7 +126,7 @@ const hostOf = (url) => {
           <SortHeader :sort="sort" column="retailer">Retailer</SortHeader>
           <SortHeader :sort="sort" column="category">Category</SortHeader>
           <SortHeader :sort="sort" column="price" class="right">Price</SortHeader>
-          <SortHeader :sort="sort" column="effective" class="right">Effective</SortHeader>
+          <SortHeader :sort="sort" column="effective" class="right">After promos</SortHeader>
           <SortHeader :sort="sort" column="verified">Verified</SortHeader>
           <SortHeader :sort="sort" column="qualifies">Qualifies</SortHeader>
         </tr>

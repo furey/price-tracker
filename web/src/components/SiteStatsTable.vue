@@ -8,6 +8,7 @@ import AppIcon from './AppIcon.vue'
 import SortHeader from './SortHeader.vue'
 import SourceLink from './SourceLink.vue'
 import { HOME_LINK_TITLE } from '../link-kinds.js'
+import { sourceActions } from '../sourceActions.js'
 import StatusPill from './StatusPill.vue'
 
 const props = defineProps({
@@ -26,7 +27,7 @@ const KIND_LABELS = { direct: 'Free check', other: 'Not in your sites' }
 const STATE_LABELS = { muted: 'Muted', weekly: 'Weekly', off: 'Off' }
 const STATE_ORDER = { weekly: 1, muted: 2, off: 2 }
 
-const emit = defineEmits(['loaded'])
+const emit = defineEmits(['loaded', 'tune'])
 
 const days = ref(30)
 const stats = ref(null)
@@ -98,6 +99,8 @@ const labelText = (row) => {
 
 const entryStatus = (entry) => (isBotCheck(entry) ? BOT_CHECK : entry.status)
 
+const tune = (action) => emit('tune', { changes: [action.change], reason: action.reason })
+
 const toggle = (key) => {
   const next = new Set(expanded.value)
   if (next.has(key)) next.delete(key)
@@ -109,7 +112,7 @@ const toggle = (key) => {
 <template>
   <div class="site-stats">
     <header class="stats-head">
-      <h3 class="group-title">Results by source</h3>
+      <h4 class="group-title">Results by source</h4>
       <div class="segmented" role="group" aria-label="Window">
         <button
           v-for="option in WINDOWS"
@@ -123,10 +126,12 @@ const toggle = (key) => {
       </div>
     </header>
     <p v-if="errorMessage" class="banner bad" role="alert">{{ errorMessage }}</p>
-    <p class="muted small lead">
-      Checks are AI research visits. Eligible means in stock, priced, and on the retailer's own
-      site. AI cost per site is not measured yet.
-    </p>
+    <dl class="muted small terms">
+      <div><dt>Checks</dt><dd>visits by AI research or a free check.</dd></div>
+      <div><dt>Found</dt><dd>listings seen.</dd></div>
+      <div><dt>Eligible</dt><dd>in stock, priced, not muted, and on the retailer's site.</dd></div>
+      <div><dt>Qualify</dt><dd>eligible listings that met your alert rules.</dd></div>
+    </dl>
     <div v-if="rows.length" class="table-wrap">
       <table>
         <thead>
@@ -168,6 +173,17 @@ const toggle = (key) => {
                 <small v-if="row.kind === 'direct'" class="muted">{{ pathOf(row.url) }}</small>
                 <small v-if="labelText(row)" class="muted">{{ labelText(row) }}</small>
                 <small v-if="row.botCheck" class="hint">{{ BOT_CHECK_HINT }}</small>
+                <div v-if="sourceActions(row).length" class="source-actions">
+                  <button
+                    v-for="action in sourceActions(row)"
+                    :key="action.label"
+                    class="btn secondary small"
+                    type="button"
+                    @click="tune(action)"
+                  >
+                    {{ action.label }}
+                  </button>
+                </div>
               </td>
               <td class="num right">{{ row.checks }}</td>
               <td class="results">
@@ -253,9 +269,34 @@ const toggle = (key) => {
   text-wrap: balance;
 }
 
-.lead {
-  margin: 0 0 var(--space-2);
+.terms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--space-4);
+  margin: 0 0 var(--space-3);
+}
+
+.terms div {
   text-wrap: pretty;
+}
+
+.terms dt {
+  display: inline;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.terms dd {
+  display: inline;
+  margin: 0 0 0 var(--space-1);
+}
+
+.source-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding-left: 28px;
 }
 
 th,
@@ -270,7 +311,7 @@ td small {
 }
 
 .name {
-  min-width: 200px;
+  min-width: 270px;
 }
 
 .name-line {

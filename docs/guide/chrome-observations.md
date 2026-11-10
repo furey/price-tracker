@@ -37,7 +37,7 @@ Handle a bot check in your own time. These steps help, in order:
 
 1. **Chrome check**: open the product page in your own browser, then record the price with the `record` command or the observations API. Claude in Chrome can read the page for you in your real browser session, or you can read it yourself. The run counts as a manual run and sends no alert. A Chrome check newer than the bot check clears the **Bot check** mark when it read the page (status `ok` or `not_found`). A Chrome check marked `blocked` or `error` leaves the mark.
 2. **Free check**: if the shop is Shopify or publishes JSON-LD, add a free check of the exact product page. See [Free direct checks](/guide/direct-checks).
-3. **Tuning**: set a site that asks every time to **Check weekly**, or press **Mute site**, to save AI runs. A muted site shows no **Bot check** mark.
+3. **Sources**: set a site that asks every time to **Check weekly**, or press **Mute site**, to save AI runs. A muted site shows no **Bot check** mark.
 
 A Chrome check that reads a site the AI could not also triggers the tuning suggestion for weekly checks of that site.
 

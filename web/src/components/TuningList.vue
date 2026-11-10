@@ -26,7 +26,7 @@ const restore = (entry) => emit('tune', { changes: [entry.restore], reason: entr
       listing to tune this item.
     </p>
     <template v-for="[group, entries] in groups" :key="group">
-      <h3 class="group-title">{{ group }}</h3>
+      <h4 class="group-title">{{ group }}</h4>
       <ul class="rows card">
         <li v-for="entry in entries" :key="entry.key">
           <div class="row-main">

@@ -128,7 +128,7 @@ onMounted(load)
               <dt>Was</dt>
               <dd class="num">{{ money(listing.wasPrice) }}</dd>
             </template>
-            <dt>Effective</dt>
+            <dt>After promos</dt>
             <dd class="num">{{ money(listing.effectivePrice ?? listing.price) }}</dd>
             <dt>Delivery</dt>
             <dd class="num">

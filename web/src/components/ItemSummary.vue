@@ -9,6 +9,7 @@ const props = defineProps({
   lastRun: { type: Object, default: null },
   runsLoaded: { type: Boolean, default: false },
   checks: { type: Array, default: () => [] },
+  schedule: { type: String, default: '' },
   lastAlert: { type: Object, default: null },
   attention: { type: Array, default: null }
 })
@@ -95,6 +96,7 @@ const alertText = (alert) => {
             <span :class="{ num: check.time, muted: check.muted }">{{ check.text }}</span>
             <span v-if="check.detail" class="muted">{{ check.detail }}</span>
           </span>
+          <span v-if="schedule" class="schedule muted small">{{ schedule }}</span>
         </dd>
       </div>
       <div class="stat">
@@ -219,6 +221,11 @@ const alertText = (alert) => {
   display: flex;
   flex-wrap: wrap;
   gap: 0 var(--space-2);
+}
+
+.schedule {
+  margin-top: var(--space-1);
+  text-wrap: pretty;
 }
 
 .check-kind {

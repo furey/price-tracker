@@ -6,7 +6,7 @@ description: Free checks read the price from a product page you already know, wi
 
 # Free direct checks
 
-A free check reads the price from a product page you already know. It uses no AI and no Claude usage, so it can run as often as you like. In the dashboard, prices from free checks show as **Curl**.
+A free check reads the price from a product page you already know. It uses no AI and no Claude usage, so it can run as often as you like. In the dashboard, prices from free checks show as **Free check**.
 
 A free check finds nothing new; it only reads the pages you give it. AI research finds new retailers and new listings. Use both: AI research a few times a week, and free checks once or twice a day on the pages that matter.
 

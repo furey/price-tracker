@@ -18,7 +18,7 @@ import { itemVerdict } from '../../../src/verdict.js'
 import { tuningChanges, tuningSummary } from '../tuningView.js'
 import { whoLabel } from '../who.js'
 import {
-  formatMoney, formatDateTime, formatDayMonth, formatPausedUntil, pauseLabel, timeZoneLabel
+  formatMoney, formatDateTime, formatDayMonth, formatPausedUntil, timeZoneLabel
 } from '../format.js'
 import { describeSchedule } from '../schedulePresets.js'
 import { aiHold, aiUsage, loadAiUsage } from '../aiState.js'
@@ -27,12 +27,14 @@ import {
 } from '../confirmCopy.js'
 import { aiHoldNote, nextChecks } from '../nextChecks.js'
 import { busiestCategory } from '../insightsView.js'
+import { priceTableRows, recentDealWindows } from '../priceTable.js'
+import { sectionElementId } from '../itemSections.js'
 import FoldSection from './FoldSection.vue'
-import PauseButton from './PauseButton.vue'
+import ItemMoreMenu from './ItemMoreMenu.vue'
 import ItemSummary from './ItemSummary.vue'
 import PriceChart from './PriceChart.vue'
+import PriceTable from './PriceTable.vue'
 import DealWindows from './DealWindows.vue'
-import LowestEver from './LowestEver.vue'
 import KitPanel from './KitPanel.vue'
 import NtfyTopic from './NtfyTopic.vue'
 import RetailersTable from './RetailersTable.vue'
@@ -56,7 +58,6 @@ const props = defineProps({
 })
 
 const DAY_OPTIONS = [30, 90, 365]
-const ENDED_WINDOW_LIMIT = 6
 const HEALTH_STATS_DAYS = 30
 const BLOCKED_STATUSES = ['blocked']
 const NOTHING_LOADED = {
@@ -86,7 +87,6 @@ const tuneSaving = ref(false)
 const tuneError = ref(null)
 const statsKey = ref(0)
 const botCheckSites = ref([])
-const siteLinks = ref({})
 const loaded = ref(NOTHING_LOADED)
 const otherLinks = ref({})
 let pollTimer = null
@@ -129,16 +129,18 @@ const listings = computed(() => research.value?.listings ?? [])
 
 const sources = computed(() => research.value?.sources ?? [])
 
-const visibleWindows = computed(() => {
-  const windows = insights.value.dealWindows
-  const live = windows.filter((window) => window.live)
-  const ended = windows.filter((window) => !window.live)
-  return [...live, ...ended.slice(0, ENDED_WINDOW_LIMIT)]
-})
+const visibleWindows = computed(() => recentDealWindows({
+  windows: insights.value.dealWindows
+}))
 
-const hiddenWindowCount = computed(
-  () => insights.value.dealWindows.length - visibleWindows.value.length
-)
+const priceRows = computed(() => (meta.value && loaded.value.insights
+  ? priceTableRows({
+    item: meta.value,
+    bestDays: insights.value.bestDays,
+    retailers: insights.value.retailers,
+    verdict: verdict.value
+  })
+  : []))
 
 const showDay = (day) => {
   openDay.value = day
@@ -150,7 +152,10 @@ const RUN_LABELS = { ok: 'OK', running: 'running', failed: 'failed', skipped: 's
 
 const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`
 
-const scheduleText = computed(() => (meta.value?.schedules ?? []).map(describeSchedule))
+const scheduleText = computed(() => {
+  const texts = (meta.value?.schedules ?? []).map(describeSchedule)
+  return texts.length ? `AI schedule (${timeZoneLabel()}): ${texts.join('; ')}` : ''
+})
 
 const liveSeries = computed(() => insights.value.series.filter(({ muted }) => !muted))
 
@@ -414,7 +419,7 @@ const launch = async (dryRun, runAnyway = false) => {
     await startRun({ id: props.itemId, dryRun, runAnyway })
     notice.value = {
       tone: 'info',
-      text: `${dryRun ? 'Dry run' : 'Run'} started. Research takes several minutes.`
+      text: `${dryRun ? 'Test run' : 'Run'} started. Research takes several minutes.`
     }
     pollUntil.value = Date.now() + POLL_AFTER_START_MS
     await refresh()
@@ -482,17 +487,15 @@ const linksByName = (rows) => Object.fromEntries(rows
 const keepBotChecks = (stats) => {
   const siteRows = (stats?.sites ?? []).filter(({ kind }) => kind === 'site')
   botCheckSites.value = siteRows.filter(({ botCheck }) => botCheck).map(({ name }) => name)
-  siteLinks.value = linksByName(siteRows)
   otherLinks.value = linksByName((stats?.sites ?? []).filter(({ kind }) => kind === 'other'))
 }
 
-const SECTION_IDS = { sources: 'item-sources', tuning: 'item-tuning', runs: 'item-runs' }
+const sectionId = sectionElementId
 
 const scrollToFocus = async () => {
-  const id = SECTION_IDS[props.focus]
-  if (!id) return
+  if (!props.focus) return
   await nextTick()
-  document.getElementById(id)?.scrollIntoView({ block: 'start' })
+  document.getElementById(sectionElementId(props.focus))?.scrollIntoView({ block: 'start' })
 }
 
 onMounted(() => {
@@ -504,6 +507,8 @@ onMounted(() => {
 onUnmounted(() => clearInterval(pollTimer))
 
 watch(() => props.itemId, load)
+
+watch(() => props.focus, scrollToFocus)
 </script>
 
 <template>
@@ -527,22 +532,11 @@ watch(() => props.itemId, load)
         <div>
           <a class="crumb" href="#/">Items</a>
           <h1>{{ meta.name }}</h1>
-          <p class="muted ids">
-            <span class="num">{{ meta.id }}</span>
-            <span class="num">version {{ meta.version }}</span>
-            <span v-if="pauseLabel(meta)" class="pill" :class="meta.status">
-              {{ pauseLabel(meta) }}
-            </span>
-            <span v-if="holdNote" class="pill neutral">{{ holdNote }}</span>
+          <p v-if="holdNote" class="muted ids">
+            <span class="pill neutral">{{ holdNote }}</span>
           </p>
         </div>
         <div class="actions">
-          <PauseButton
-            v-if="meta.status !== 'archived'"
-            :item="meta"
-            @changed="applyStatus"
-            @failed="showFailure"
-          />
           <a class="btn secondary" :href="editHref">Edit</a>
           <button
             class="btn"
@@ -552,14 +546,14 @@ watch(() => props.itemId, load)
           >
             {{ launching === 'run' ? 'Starting...' : 'Run now' }}
           </button>
-          <button
-            class="btn secondary"
-            type="button"
-            :disabled="launching !== null || isRunning"
-            @click="launch(true)"
-          >
-            {{ launching === 'dry' ? 'Starting...' : 'Dry run' }}
-          </button>
+          <ItemMoreMenu
+            :item="meta"
+            :run-disabled="launching !== null || isRunning"
+            :test-starting="launching === 'dry'"
+            @test-run="launch(true)"
+            @changed="applyStatus"
+            @failed="showFailure"
+          />
         </div>
       </header>
 
@@ -614,133 +608,106 @@ watch(() => props.itemId, load)
         :last-run="lastRunRow"
         :runs-loaded="loaded.runs"
         :checks="checks"
+        :schedule="scheduleText"
         :last-alert="meta.lastAlert"
         :attention="attention"
       />
 
-      <p v-if="scheduleText.length" class="schedules muted">
-        <span>Checks ({{ timeZoneLabel() }}):</span>
-        <span v-for="(text, index) in scheduleText" :key="index">{{ text }}</span>
-      </p>
+      <section class="group" aria-labelledby="group-prices">
+        <h2 id="group-prices" class="group-title">Prices</h2>
 
-      <section class="section">
-        <header>
-          <h2>Deal windows</h2>
-          <span class="muted small">Days when a listing met your rules</span>
-        </header>
-        <DealWindows v-if="loaded.insights" :windows="visibleWindows" @open-day="showDay" />
-        <p v-else class="muted loading-note">Loading</p>
-        <p v-if="hiddenWindowCount" class="muted small more">
-          {{ hiddenWindowCount }} older ended windows not shown.
-        </p>
-      </section>
-
-      <section v-if="insights.bestDays.length" class="section">
-        <header>
-          <h2>Lowest ever</h2>
-          <span class="muted small">Cheapest effective price recorded</span>
-        </header>
-        <LowestEver
-          :best-days="insights.bestDays"
-          :categories="meta.categories"
-          @open-day="showDay"
-        />
-      </section>
-
-      <section class="section">
-        <header>
-          <h2>Price history</h2>
-          <div class="segmented" role="group" aria-label="Days">
-            <button
-              v-for="option in DAY_OPTIONS"
-              :key="option"
-              type="button"
-              :aria-pressed="days === option"
-              @click="changeDays(option)"
-            >
-              {{ option }} days
-            </button>
-          </div>
-        </header>
-        <p v-if="!loaded.insights" class="muted loading-note">Loading</p>
-        <PriceChart
-          v-else
-          v-model:show-muted="showMuted"
-          :daily="insights.series"
-          :rules="meta.rules"
-          :categories="meta.categories"
-          @select-day="showDay"
-        />
-      </section>
-
-      <div class="folds">
-        <FoldSection
-          id="item-tuning"
-          name="item-tuning"
-          title="Tuning"
-          :summary="tuningText"
-          :force-open="focus === 'tuning'"
-        >
-          <TuningSuggestions
-            :report="suggestionState.report.value"
-            :busy="suggestionState.busy.value"
-            @accept="suggestionState.accept"
-            @accept-everywhere="suggestionState.acceptEverywhere"
-            @dismiss="suggestionState.dismiss"
-            @restore="suggestionState.restore"
+        <section class="part">
+          <header class="part-head">
+            <h3>Price history</h3>
+            <div class="segmented" role="group" aria-label="Days">
+              <button
+                v-for="option in DAY_OPTIONS"
+                :key="option"
+                type="button"
+                :aria-pressed="days === option"
+                @click="changeDays(option)"
+              >
+                {{ option }} days
+              </button>
+            </div>
+          </header>
+          <p v-if="!loaded.insights" class="muted loading-note">Loading</p>
+          <PriceChart
+            v-else
+            v-model:show-muted="showMuted"
+            :daily="insights.series"
+            :rules="meta.rules"
+            :categories="meta.categories"
+            @select-day="showDay"
           />
-          <TuningList :item="meta" @tune="requestTune" />
-        </FoldSection>
+        </section>
 
-        <FoldSection
-          v-if="meta.sources?.sites?.length || sources.length"
-          id="item-sources"
-          name="item-sources"
-          title="Sources"
-          :summary="sourceSummary"
-          :force-open="focus === 'sources'"
-        >
-          <SiteStatsTable :item-id="itemId" :refresh-key="statsKey" />
-          <p class="fold-note muted">
-            Statuses from the latest successful run. Muting a site stops the AI visiting it;
-            a listing from it found another way can still alert.
-          </p>
-          <SourcesPanel
-            :item="meta"
-            :sources="sources"
-            :bot-check-sites="botCheckSites"
-            :site-links="siteLinks"
-            :other-links="otherLinks"
-            @tune="requestTune"
-          />
-        </FoldSection>
+        <section v-if="priceRows.length" class="part">
+          <header class="part-head">
+            <h3>By category</h3>
+            <span class="muted small">Prices after promos</span>
+          </header>
+          <PriceTable :rows="priceRows" @open-day="showDay" />
+        </section>
 
-        <FoldSection
-          v-if="insights.kits?.length"
-          name="item-kits"
-          title="Kit prices"
-          :summary="kitSummary"
-        >
-          <p class="fold-note muted">Cheapest in-stock part from each retailer, summed.</p>
-          <KitPanel :kits="insights.kits" />
-        </FoldSection>
+        <section v-if="visibleWindows.length" class="part">
+          <header class="part-head">
+            <h3>Deal windows</h3>
+            <span class="muted small">Days when a listing met your rules</span>
+          </header>
+          <DealWindows :windows="visibleWindows" @open-day="showDay" />
+        </section>
+      </section>
 
-        <FoldSection
-          v-if="insights.retailers.length"
-          name="item-retailers"
-          title="Retailers"
-          :summary="retailerSummary"
-        >
-          <p class="fold-note muted">Effective prices; delivery shown where known.</p>
-          <RetailersTable v-model:show-muted="showMuted" :retailers="insights.retailers" />
-        </FoldSection>
+      <section class="group" aria-labelledby="group-details">
+        <h2 id="group-details" class="group-title">Details</h2>
+        <div class="folds">
+          <FoldSection
+            v-if="insights.retailers.length"
+            :id="sectionId('retailers')"
+            name="item-retailers"
+            title="Retailers"
+            :level="3"
+            :summary="retailerSummary"
+            :force-open="focus === 'retailers'"
+          >
+            <p class="fold-note muted">Prices after promos; delivery shown where known.</p>
+            <RetailersTable v-model:show-muted="showMuted" :retailers="insights.retailers" />
+          </FoldSection>
 
-        <FoldSection name="item-changes" title="Price changes" :summary="changeSummary">
-          <PriceChanges :changes="insights.priceChanges" @open-day="showDay" />
-        </FoldSection>
+          <FoldSection
+            v-if="insights.kits?.length"
+            :id="sectionId('kit')"
+            name="item-kits"
+            title="Kit prices"
+            :level="3"
+            :summary="kitSummary"
+            :force-open="focus === 'kit'"
+          >
+            <p class="fold-note muted">Cheapest in-stock part from each retailer, summed.</p>
+            <KitPanel :kits="insights.kits" />
+          </FoldSection>
 
-        <template v-if="hasRuns">
-          <FoldSection name="item-listings" title="Latest listings" :summary="listingSummary">
+          <FoldSection
+            :id="sectionId('changes')"
+            name="item-changes"
+            title="Price changes"
+            :level="3"
+            :summary="changeSummary"
+            :force-open="focus === 'changes'"
+          >
+            <PriceChanges :changes="insights.priceChanges" @open-day="showDay" />
+          </FoldSection>
+
+          <FoldSection
+            v-if="hasRuns"
+            :id="sectionId('listings')"
+            name="item-listings"
+            title="Latest listings"
+            :level="3"
+            :summary="listingSummary"
+            :force-open="focus === 'listings'"
+          >
             <p v-if="latestRun" class="fold-note muted">
               From run {{ latestRun.id }}, {{ formatDateTime(latestRun.startedAt) }}.
             </p>
@@ -756,48 +723,106 @@ watch(() => props.itemId, load)
               <p>The latest successful run found no listings, or no run has finished.</p>
             </div>
           </FoldSection>
+        </div>
+      </section>
+
+      <section class="group" aria-labelledby="group-activity">
+        <h2 id="group-activity" class="group-title">Activity</h2>
+        <div class="folds">
+          <FoldSection
+            :id="sectionId('alerts')"
+            name="item-alerts"
+            title="Recent alerts"
+            :level="3"
+            :summary="alertSummary"
+            :force-open="Boolean(alertId) || focus === 'alerts'"
+          >
+            <AlertsList v-if="alerts.length" :alerts="alerts" />
+            <p v-else-if="!loaded.alerts" class="muted loading-note">Loading</p>
+            <div v-else class="empty">
+              <p>No alerts sent for this item yet.</p>
+            </div>
+          </FoldSection>
 
           <FoldSection
-            id="item-runs"
+            v-if="hasRuns"
+            :id="sectionId('runs')"
             name="item-runs"
             title="Recent runs"
+            :level="3"
             :summary="runSummary"
             :force-open="focus === 'runs'"
           >
             <RunsTable :runs="runs" />
           </FoldSection>
-        </template>
+        </div>
+        <div v-if="loaded.runs && !hasRuns" class="empty no-runs">
+          <h3>No runs yet</h3>
+          <p>Start a test run to check prices without saving history or sending alerts.</p>
+          <button class="btn" type="button" :disabled="launching !== null" @click="launch(true)">
+            Test run
+          </button>
+        </div>
+      </section>
 
-        <FoldSection
-          name="item-alerts"
-          title="Recent alerts"
-          :summary="alertSummary"
-          :force-open="Boolean(alertId)"
-        >
-          <AlertsList v-if="alerts.length" :alerts="alerts" />
-          <p v-else-if="!loaded.alerts" class="muted loading-note">Loading</p>
-          <div v-else class="empty">
-            <p>No alerts sent for this item yet.</p>
-          </div>
-        </FoldSection>
+      <section class="group" aria-labelledby="group-settings">
+        <h2 id="group-settings" class="group-title">Settings and tuning</h2>
+        <div class="folds">
+          <FoldSection
+            :id="sectionId('tuning')"
+            name="item-tuning"
+            title="Suggestions and muted"
+            :level="3"
+            :summary="tuningText"
+            :force-open="focus === 'tuning'"
+          >
+            <TuningSuggestions
+              :report="suggestionState.report.value"
+              :busy="suggestionState.busy.value"
+              @accept="suggestionState.accept"
+              @accept-everywhere="suggestionState.acceptEverywhere"
+              @dismiss="suggestionState.dismiss"
+              @restore="suggestionState.restore"
+            />
+            <TuningList :item="meta" @tune="requestTune" />
+          </FoldSection>
 
-        <FoldSection
-          v-if="meta.ntfy"
-          name="item-phone"
-          title="Phone alerts"
-          :summary="`ntfy topic ${meta.ntfy.topic}`"
-        >
-          <NtfyTopic :server="meta.ntfy.server" :topic="meta.ntfy.topic" />
-        </FoldSection>
-      </div>
+          <FoldSection
+            v-if="meta.sources?.sites?.length || meta.direct?.length || sources.length"
+            :id="sectionId('sources')"
+            name="item-sources"
+            title="Sources"
+            :level="3"
+            :summary="sourceSummary"
+            :force-open="focus === 'sources'"
+          >
+            <p class="fold-note muted">
+              Muting a site stops the AI visiting it; a listing from it found another way can
+              still alert.
+            </p>
+            <SiteStatsTable :item-id="itemId" :refresh-key="statsKey" @tune="requestTune" />
+            <SourcesPanel
+              :item="meta"
+              :sources="sources"
+              :other-links="otherLinks"
+              @tune="requestTune"
+            />
+          </FoldSection>
 
-      <div v-if="loaded.runs && !hasRuns" class="empty section">
-        <h2>No runs yet</h2>
-        <p>Run a dry run to check prices without saving history or sending alerts.</p>
-        <button class="btn" type="button" :disabled="launching !== null" @click="launch(true)">
-          Dry run
-        </button>
-      </div>
+          <FoldSection
+            v-if="meta.ntfy"
+            :id="sectionId('phone')"
+            name="item-phone"
+            title="Phone alerts"
+            :level="3"
+            summary="The ntfy topic for this item"
+            :force-open="focus === 'phone'"
+          >
+            <NtfyTopic :server="meta.ntfy.server" :topic="meta.ntfy.topic" />
+          </FoldSection>
+        </div>
+      </section>
+
       <TuningSheet
         v-if="tuneRequest"
         :request="{ ...tuneRequest, changes: tuneRequest.diff }"
@@ -820,6 +845,8 @@ watch(() => props.itemId, load)
 
 <style scoped>
 .detail-head {
+  position: relative;
+  z-index: 5;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -871,21 +898,50 @@ watch(() => props.itemId, load)
   font-size: var(--text-caption);
 }
 
-.schedules {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px var(--space-3);
-  margin-top: var(--space-2);
-  font-size: var(--text-caption);
-}
-
 .fold-note {
   margin-bottom: var(--space-3);
   font-size: var(--text-caption);
 }
 
-.more {
-  margin: var(--space-2) 0 0;
+.group {
+  margin-top: var(--space-7);
+}
+
+.group-title {
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--ink);
+  font-size: var(--text-heading);
+  text-wrap: balance;
+}
+
+.group .folds {
+  margin-top: 0;
+}
+
+.group .folds > .fold:first-child {
+  border-top: 0;
+}
+
+.part {
+  margin-top: var(--space-5);
+}
+
+.part-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.part-head h3 {
+  font-size: var(--text-title);
+  text-wrap: balance;
+}
+
+.no-runs {
+  margin-top: var(--space-4);
 }
 
 .loading-note {
@@ -896,9 +952,14 @@ watch(() => props.itemId, load)
 @media (max-width: 560px) {
   .actions {
     width: 100%;
+    flex-wrap: nowrap;
   }
-  .actions .btn {
-    flex: 1 1 40%;
+  .actions > * {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+  .actions :deep(.more-toggle) {
+    width: 100%;
     justify-content: center;
   }
 }

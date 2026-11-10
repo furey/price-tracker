@@ -15,7 +15,7 @@ One AI research run is one check of one item. Claude searches the web and reads 
 AI research runs:
 
 - on the item's AI research schedule;
-- when you press **Run now** or **Dry run** on the item page;
+- when you press **Run now**, or **Test run** under **More**, on the item page;
 - when you press **Run full test (1 AI check)** in the new-item wizard.
 
 Only one AI job runs at a time. A scheduled run that falls due while another AI job runs waits for the next 15-minute tick. After a failed run, the app waits 2 hours before that item's next scheduled AI run.

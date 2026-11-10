@@ -42,7 +42,7 @@ const dismissedText = (dismissal) => [
 
 <template>
   <div class="tuning-suggestions">
-    <h3 class="group-title">Suggestions</h3>
+    <h4 class="group-title">Suggestions</h4>
     <p v-if="!suggestions.length" class="muted small quiet">
       Nothing to tune right now. Suggestions come from at least 3 checks of a site.
     </p>

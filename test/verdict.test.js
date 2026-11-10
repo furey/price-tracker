@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { itemVerdict, targetPrice } from '../src/verdict.js'
+import {
+  bestRecentByCategory, hasLiveDeal, itemVerdict, targetPrice
+} from '../src/verdict.js'
 
 const now = new Date('2026-11-10T06:00:00Z')
 
@@ -84,4 +86,22 @@ test('itemVerdict shows the cheapest price when no category has a rule', () => {
   const verdict = itemVerdict({ item: bare, retailers, now })
   assert.equal(verdict.kind, 'no-rule')
   assert.equal(verdict.price, 1769)
+})
+
+test('hasLiveDeal needs a live window in a watched category', () => {
+  const window = { live: true, category: 'base', retailer: 'Myer', lowest: 1500, best: {} }
+  assert.equal(hasLiveDeal({ item, dealWindows: [window] }), true)
+  assert.equal(hasLiveDeal({ item, dealWindows: [{ ...window, live: false }] }), false)
+  const muted = { ...item, tuning: { categories: { base: { state: 'muted' } } } }
+  assert.equal(hasLiveDeal({ item: muted, dealWindows: [window] }), false)
+  assert.equal(hasLiveDeal({ item }), false)
+})
+
+test('bestRecentByCategory keeps the cheapest recent offer per watched category', () => {
+  const stale = row('Bunnings', 'base', 1500, { lastSeen: '2026-10-01T00:00:00Z' })
+  const best = bestRecentByCategory({ item, retailers: [...retailers, stale], now })
+  assert.deepEqual([...best.keys()], ['sun-bundle', 'bundle', 'base'])
+  assert.equal(best.get('base').retailer, 'Temple & Webster')
+  assert.equal(best.get('base').price, 1769)
+  assert.equal(best.get('base').target, 1600)
 })

@@ -120,7 +120,7 @@ onUnmounted(() => clearInterval(draftTimer))
 <template>
   <main>
     <h1>Items</h1>
-    <p class="muted intro">Prices checked on schedule, lowest effective price per retailer.</p>
+    <p class="muted intro">Prices checked on schedule, lowest price after promos per retailer.</p>
 
     <ClaudeUsageCard class="usage-top" />
 
@@ -177,6 +177,7 @@ onUnmounted(() => clearInterval(draftTimer))
                 </a>
               </h2>
               <div class="head-actions">
+                <span v-if="item.dealLive" class="pill ok">Deal live</span>
                 <span v-if="pauseLabel(item)" class="pill" :class="item.status">
                   {{ pauseLabel(item) }}
                 </span>

@@ -15,6 +15,19 @@ export const itemVerdict = ({ item, dealWindows = [], retailers = [], now = new 
   return { kind: 'gap', ...closest }
 }
 
+export const hasLiveDeal = ({ item, dealWindows = [] }) =>
+  Boolean(liveDeal({ dealWindows, order: watchedOrder(item) }))
+
+export const bestRecentByCategory = ({ item, retailers = [], now = new Date() }) => {
+  const order = watchedOrder(item)
+  const offers = recentOffers({ item, retailers, now, order })
+  return new Map(order
+    .map((category) => [category, pickOffer(
+      offers.filter((offer) => offer.category === category), byPrice(order)
+    )])
+    .filter(([, offer]) => offer))
+}
+
 export const targetPrice = ({ rule, isClearance = false }) => {
   if (!rule) return null
   const cap = isClearance && isNumber(rule.maxPriceIfClearance)

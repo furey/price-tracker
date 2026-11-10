@@ -97,7 +97,7 @@ watch(() => props.day, load)
             </div>
             <div class="prices">
               <p class="num effective">{{ formatMoney(row.effectivePrice ?? row.price) }}</p>
-              <p class="muted small">effective price</p>
+              <p class="muted small">after promos</p>
             </div>
           </div>
           <dl class="facts">

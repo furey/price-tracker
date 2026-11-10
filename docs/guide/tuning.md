@@ -8,7 +8,7 @@ description: Tell an item what you do not want, act on its suggestions, and see 
 
 Tuning tells an item what you do not want: a model, an exact product, a site, a search phrase, or a free check. Nothing is deleted. Prices are still recorded; nothing muted ever alerts. Every tuning change saves a new version of the item, with who made it, when, and why.
 
-Open an item page, then the **Tuning** section. It holds the suggestions and a list of everything you muted.
+Open an item page, then **Suggestions and muted** under **Settings and tuning**. It holds the suggestions and a list of everything you muted.
 
 ## Tuning actions
 
@@ -27,7 +27,7 @@ The code applies muted models and hidden products to every listing before it dec
 
 Every tuning change opens a review sheet first. Nothing saves until you confirm.
 
-1. Check the change listed under **Tuning**.
+1. Check the change listed in the sheet.
 2. Type why in **Note**.
 3. Under **Changed by**, pick who is making the change. The browser remembers your choice.
 4. Press the confirm button.
@@ -42,7 +42,7 @@ The item card, the chart, the retailers table, and the latest listings hide mute
 
 ## Restore
 
-The **Tuning** section lists everything you muted, with who muted it, when, and why. Press **Restore** to undo a mute, or **Every run** to take a site off weekly checks. A restore saves a new version too.
+The **Suggestions and muted** section lists everything you muted, with who muted it, when, and why. Press **Restore** to undo a mute, or **Every run** to take a site off weekly checks. A restore saves a new version too.
 
 Restoring an old version of the item keeps your current tuning, unless you tick **Also restore the tuning from version**. See [Restore a version](/guide/editing#restore-a-version).
 
@@ -96,15 +96,15 @@ The new-item research uses this too. It asks Claude to leave out sites that bloc
 
 ## Results by source
 
-The **Sources** section opens with a table of each site, free check, and other retailer over **30 days** or **90 days**.
+The **Sources** section opens with a table of each site, free check, and other retailer over **30 days** or **90 days**. Each site and free check row has its tuning buttons under the name.
 
 ![The Results by source table](/screenshots/results-by-source.png)
 
-- **Checks**: the number of AI research visits.
+- **Checks**: the number of visits by AI research, or by the free check.
 - **Results**: a bar of **OK**, blocked, error, and not-found results, with Chrome checks under it.
 - **Found**: listings found.
-- **Eligible**: listings in stock, priced, not muted, and on the retailer's own site.
-- **Qualify**: listings that met your rules.
+- **Eligible**: found listings in stock, priced, not muted, and on the retailer's own site.
+- **Qualify**: eligible listings that met your rules.
 - **Alerts**: alerts sent.
 - **Last useful**: the date of the last eligible listing.
 

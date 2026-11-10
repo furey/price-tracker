@@ -76,6 +76,12 @@ const allSeries = computed(() => {
 
 const series = computed(() => focusedSeries({ series: allSeries.value, focused: focused.value }))
 
+const shownSources = computed(() => {
+  const present = new Set(allSeries.value
+    .flatMap(({ points }) => points.map(({ source }) => source)))
+  return Object.entries(SOURCE_LABELS).filter(([source]) => present.has(source))
+})
+
 const caps = computed(() => groupCaps(categoryRules.value))
 
 const categoryRules = computed(() => (category.value && props.rules?.[category.value]
@@ -358,7 +364,7 @@ watch(allSeries, (lines) => {
             {{ line.name }}
           </button>
         </li>
-        <li v-for="(label, source) in SOURCE_LABELS" :key="source" class="source-key">
+        <li v-for="[source, label] in shownSources" :key="source" class="source-key">
           <svg width="14" height="14" aria-hidden="true">
             <path
               :d="markerPath({ source, x: 7, y: 7, radius: 4 })"
@@ -389,7 +395,7 @@ watch(allSeries, (lines) => {
           :height="height"
           :viewBox="`0 0 ${width} ${height}`"
           role="img"
-          aria-label="Lowest effective price per retailer by day"
+          aria-label="Lowest price after promos per retailer by day"
           @pointermove="onPointer"
           @pointerdown="onPointer"
           @pointerleave="clearHover"

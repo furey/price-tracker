@@ -253,6 +253,7 @@ test('GET /api/items adds a daily trend of usable prices for the top category', 
         { day: '2026-11-06', lowest: 1000 }
       ]
     })
+    assert.equal(item.dealLive, true)
   })
 })
 
@@ -260,6 +261,7 @@ test('GET /api/items gives a null trend when no usable prices exist', async () =
   await withServer(async ({ get }) => {
     const [item] = await get('/api/items')
     assert.equal(item.trend, null)
+    assert.equal(item.dealLive, false)
   })
 })
 

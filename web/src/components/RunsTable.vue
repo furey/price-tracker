@@ -6,7 +6,7 @@ import StatusPill from './StatusPill.vue'
 
 const props = defineProps({ runs: { type: Array, default: () => [] } })
 
-const triggerLabels = { tick: 'Scheduled', manual: 'Manual', 'dry-run': 'Dry run' }
+const triggerLabels = { tick: 'Scheduled', manual: 'Manual', 'dry-run': 'Test run' }
 
 const sort = useSort({
   rows: () => props.runs,

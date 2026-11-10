@@ -12,6 +12,7 @@ import NewItem from './components/NewItem.vue'
 import SettingsView from './components/SettingsView.vue'
 import { alertRoute, hashAfterLogin, legacyHashTarget } from './loginReturn.js'
 import { configureRegion } from './format.js'
+import { sectionFromHash } from './itemSections.js'
 
 const redirectLegacyHash = () => {
   const target = legacyHashTarget(window.location.hash)
@@ -33,8 +34,7 @@ const itemId = computed(() => {
 
 const alertId = computed(() => alertRoute(hash.value)?.alertId ?? null)
 
-const focus = computed(() => hash.value.match(/^#\/item\/[^/?]+\/(sources|tuning|runs)\b/)?.[1]
-  ?? null)
+const focus = computed(() => sectionFromHash(hash.value))
 
 const isEdit = computed(() => /^#\/item\/[^/?]+\/edit/.test(hash.value))
 
@@ -51,7 +51,7 @@ const pageKey = computed(() => {
   if (isSettings.value) return 'settings'
   if (newItem.value) return `new-${newItem.value.draftId ?? 'new'}-${newItem.value.step ?? ''}`
   if (itemId.value && isEdit.value) return `edit-${itemId.value}`
-  if (itemId.value) return `item-${itemId.value}-${alertId.value ?? ''}-${focus.value ?? ''}`
+  if (itemId.value) return `item-${itemId.value}-${alertId.value ?? ''}`
   return 'items'
 })
 

@@ -7,7 +7,8 @@ const props = defineProps({
   title: { type: String, required: true },
   summary: { type: String, default: '' },
   initial: { type: Boolean, default: false },
-  forceOpen: { type: Boolean, default: false }
+  forceOpen: { type: Boolean, default: false },
+  level: { type: Number, default: 2 }
 })
 
 const open = useStoredOpen({ key: props.name, initial: props.initial })
@@ -24,7 +25,7 @@ defineExpose({ show })
 
 <template>
   <section class="fold" :class="{ open }">
-    <h2 class="fold-heading">
+    <component :is="`h${level}`" class="fold-heading">
       <button
         class="fold-toggle"
         type="button"
@@ -38,7 +39,7 @@ defineExpose({ show })
           <path d="M4 6l4 4 4-4" />
         </svg>
       </button>
-    </h2>
+    </component>
     <div v-show="open" :id="bodyId" class="fold-body">
       <slot />
     </div>

@@ -77,7 +77,7 @@ export const pauseLabel = ({ status, pausedUntil }) => {
 
 export const SOURCE_LABELS = {
   research: 'AI research',
-  direct: 'Curl',
+  direct: 'Free check',
   manual: 'Chrome',
   kit: 'Kit'
 }

@@ -23,7 +23,7 @@ const savingClass = (vsBundle) => {
   <div class="kits">
     <article v-for="kit in kits" :key="kit.id" class="kit">
       <header>
-        <h3>{{ kit.name }}</h3>
+        <h4>{{ kit.name }}</h4>
         <p class="total num">
           {{ formatMoney(kit.total) }}
           <small v-if="kit.delivered !== null" class="muted">
@@ -62,13 +62,15 @@ header {
   gap: var(--space-1) var(--space-4);
 }
 
-h3,
+h4,
 .total,
 .versus {
   margin: 0;
 }
 
-h3 {
+h4 {
+  font-size: var(--text-title);
+  line-height: 1.2;
   text-wrap: balance;
 }
 

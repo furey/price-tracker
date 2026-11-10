@@ -104,7 +104,7 @@ export const confirmRun = ({
   name, dryRun, anyway = false, guardMessage = null, weekly, hold = null
 }) =>
   askConfirm({
-    title: dryRun ? `Start a dry run of ${name}?` : `Run ${name} now?`,
+    title: dryRun ? `Start a test run of ${name}?` : `Run ${name} now?`,
     message: [
       dryRun
         ? 'Claude researches prices now. Nothing is saved to history and no alerts are sent.'
@@ -161,8 +161,8 @@ const weeklyText = (weekly) => {
 }
 
 const runLabel = ({ dryRun, anyway }) => {
-  if (anyway) return dryRun ? 'Start dry run anyway' : 'Run anyway'
-  return dryRun ? 'Start dry run' : 'Run now'
+  if (anyway) return dryRun ? 'Start test run anyway' : 'Run anyway'
+  return dryRun ? 'Start test run' : 'Run now'
 }
 
 export const confirmDraftAnyway = ({ guardMessage, weekly }) => askConfirm({

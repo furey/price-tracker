@@ -21,8 +21,8 @@ Work down this list.
 2. **Check the delivery.** Open the item page, then **Recent alerts**. **Not delivered** means ntfy did not accept the alert, and the error shows under it. On a Mac, the app also shows a macOS notification when an alert is not delivered.
 3. **Check for a repeat.** Open **Latest listings**. A note such as `suppressed: already alerted at $899, now $899` means the app already sent this deal. A repeat alert needs a lower price. See [Repeat alerts](/guide/alerts#repeat-alerts).
 4. **Check for a "check this listing" notice.** A note with `check before buying` means the app sent a low-priority notice instead of a deal alert. The site is unknown, or the price looks too low. Your phone can deliver low-priority notices silently. See [Check this listing](/guide/alerts#alert-kinds-check-this-listing).
-5. **Check for a mute.** A muted model or hidden product never sends a deal alert. Open **Tuning** to see what is muted.
-6. **Check the run kind.** A **Dry run**, a wizard test, and a recorded Chrome price never send alerts.
+5. **Check for a mute.** A muted model or hidden product never sends a deal alert. Open **Suggestions and muted** to see what is muted.
+6. **Check the run kind.** A **Test run**, a wizard test, and a recorded Chrome price never send alerts.
 
 ### Token withheld
 
