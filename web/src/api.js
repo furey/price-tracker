@@ -115,6 +115,10 @@ export const getBotChecks = () => request('/api/bot-checks', {}, { raw: true })
 
 export const getSweep = () => request('/api/sweep', {}, { raw: true })
 
+export const recordObservations = ({ id, data }) => sendJson({
+  url: `/api/items/${encodeURIComponent(id)}/observations`, method: 'POST', body: data, raw: true
+})
+
 export const markBotChecksSeen = ({ checks, by }) =>
   sendJson({ url: '/api/bot-checks/seen', method: 'POST', body: { checks, by }, raw: true })
 

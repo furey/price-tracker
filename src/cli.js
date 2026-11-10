@@ -20,9 +20,7 @@ import {
 } from './runner.js'
 import { activeRegion } from './region.js'
 import { nextSlot } from './schedule.js'
-import {
-  dashboardUrlFrom, deliveryFrom, resolveSettings, rotateAppTopic
-} from './settings.js'
+import { deliveryFrom, resolveSettings, rotateAppTopic } from './settings.js'
 import { startServer } from './server.js'
 import { sweepPrompt } from './sweep.js'
 import { formatPrice } from './text.js'
@@ -99,9 +97,7 @@ const commands = {
     const db = openStore()
     const items = sweepItems({ db, records: itemRecords({ db }), now: new Date() })
     if (items.length === 0) return console.log('No blocked pages to check in Chrome')
-    const dashboardUrl = dashboardUrlFrom(resolveSettings({ db })) || undefined
-    const labels = activeRegion({ db }).deliveryLabels
-    console.log(sweepPrompt({ items, dashboardUrl, labels }))
+    console.log(sweepPrompt({ items, labels: activeRegion({ db }).deliveryLabels }))
   },
 
   status: async () => {

@@ -26,7 +26,7 @@ export const sweepItem = ({ item, rows, delivery = null }) => {
   }
 }
 
-export const sweepPrompt = ({ items, dashboardUrl, labels = AU_LABELS }) => [
+export const sweepPrompt = ({ items, labels = AU_LABELS }) => [
   'Check these prices in this Chrome browser for my Price Tracker app.',
   '',
   'Rules:',
@@ -34,30 +34,33 @@ export const sweepPrompt = ({ items, dashboardUrl, labels = AU_LABELS }) => [
   ...locationRules(labels),
   '',
   ...items.flatMap((item) => itemSection({ ...item, labels })),
-  'When you finish the pages, open the dashboard at',
-  `${dashboardUrl ?? DASHBOARD_PLACEHOLDER} in this browser.`,
-  'For each item, run this in that dashboard tab, with the item id and the JSON:',
-  '',
-  'await fetch(\'/api/items/<item id>/observations\', { method: \'POST\',',
-  '  headers: { \'content-type\': \'application/json\' }, body: JSON.stringify(<JSON>) })',
-  '',
-  'The JSON has this shape:',
+  'When you finish the pages, tell me what you checked, what failed, and every sign-up',
+  'discount you saw. Then end your reply with one ```json block per item, in this shape:',
   '',
   JSON.stringify(EXAMPLE, null, 2),
   '',
+  'Set "itemId" to the item id above.',
   'Use one entry in "sources" per page, with status ok, blocked, error, or not_found.',
   'Use one entry in "listings" per product you can see, with a category id from that item,',
   'or "reject" with a rejectReason. Use null for a number you cannot see.',
   'isClearance, inStock, and verified must be true or false, never null. Use false when the page',
-  'does not show it.',
-  'A 201 reply means the app recorded the prices. Tell me what you recorded, what failed,',
-  'and every sign-up discount you saw.'
+  'does not show it.'
 ].join('\n')
+
+export const parseSweepReply = (text) => {
+  const blocks = [...String(text ?? '').matchAll(CODE_BLOCK)].map(([, body]) => body)
+  if (blocks.length === 0) return { results: [], problems: ['No ```json block found.'] }
+  const parsed = blocks.map((body, index) => parseBlock({ body, number: index + 1 }))
+  return {
+    results: parsed.filter(({ result }) => result).map(({ result }) => result),
+    problems: parsed.filter(({ problem }) => problem).map(({ problem }) => problem)
+  }
+}
 
 const SWEEP_KINDS = ['site', 'direct']
 const OFF_STATES = ['muted', 'off']
 const MANUAL_MODE = 'manual'
-const DASHBOARD_PLACEHOLDER = '<your dashboard address>'
+const CODE_BLOCK = /```(?:json)?[ \t]*\r?\n([\s\S]*?)```/g
 const AU_LABELS = { postcode: 'postcode', locality: 'suburb' }
 
 const RULES = [
@@ -82,6 +85,7 @@ const locationRules = ({ postcode, locality }) => [
 ]
 
 const EXAMPLE = {
+  itemId: '<item id>',
   checkedAt: '<ISO date and time of the check>',
   sources: [{ name: '<site name>', status: 'ok', note: 'Checked in Chrome' }],
   listings: [{
@@ -120,3 +124,15 @@ const sourceLine = ({ name, url }) => (url
 const deliveryLine = ({ delivery: { suburb, postcode }, labels }) => (suburb
   ? `My ${labels.locality} and ${labels.postcode}: ${suburb} ${postcode}`
   : `My ${labels.postcode}: ${postcode}`)
+
+const parseBlock = ({ body, number }) => {
+  try {
+    const { itemId, ...data } = JSON.parse(body)
+    if (typeof itemId !== 'string' || !itemId) {
+      return { problem: `Block ${number} has no "itemId".` }
+    }
+    return { result: { itemId, data } }
+  } catch {
+    return { problem: `Block ${number} is not valid JSON.` }
+  }
+}

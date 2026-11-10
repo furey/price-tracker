@@ -7,6 +7,7 @@ import { formatMoney, formatDateTime, pauseLabel } from '../format.js'
 import { aiHoldNote, nextChecks } from '../nextChecks.js'
 import { POLL_MS, draftName } from '../wizard.js'
 import BotCheckNotice from './BotCheckNotice.vue'
+import SweepPanel from './SweepPanel.vue'
 import ClaudeUsageCard from './ClaudeUsageCard.vue'
 import DraftCard from './DraftCard.vue'
 import PauseButton from './PauseButton.vue'
@@ -160,6 +161,7 @@ onUnmounted(() => clearInterval(draftTimer))
         Every item is archived.
       </p>
       <BotCheckNotice />
+      <SweepPanel />
       <ul class="grid">
         <li
           v-for="(item, index) in (showArchived ? items : current)"

@@ -45,16 +45,18 @@ A Chrome check that reads a site the AI could not also triggers the tuning sugge
 
 A Chrome sweep checks every blocked page in one go, with Claude in Chrome in your own browser. It lists each site and free check of an active item whose latest scheduled check in the last `30` days was blocked, for any reason. A muted site, a site set to off, and a site with a newer Chrome check are not on the list.
 
-The app never starts a sweep. You start it, and you stay at the browser while it runs.
+The app never starts a sweep. You start it, and you stay at the browser while it runs. While blocked pages exist, a **Chrome sweep** card sits above the item cards.
 
-1. Press **Copy Chrome sweep prompt** on the **Sites asking for a human check** notice, or run `node src/cli.js sweep` (`docker exec price-tracker node src/cli.js sweep` with Docker).
-2. Sign in to the dashboard in Chrome.
-3. Paste the prompt into Claude in Chrome.
-4. Solve any CAPTCHA or bot check that Claude asks you to solve.
+1. Press **Copy prompt** on the **Chrome sweep** card, or run `node src/cli.js sweep` (`docker exec price-tracker node src/cli.js sweep` with Docker).
+2. Paste the prompt into Claude in Chrome.
+3. Solve any CAPTCHA or bot check that Claude asks you to solve.
+4. Copy Claude's whole reply.
+5. Press **Record results** on the **Chrome sweep** card.
+6. Paste the reply, then press **Record**.
 
-The prompt tells Claude to read each page at a normal pace, to stop at a CAPTCHA and ask you, and never to try to get past a block. It gives the delivery suburb and postcode from **Settings** (or the item's own override). When a store asks where you are, Claude enters them, and picks the nearest store when the site needs one; when the browser asks to share your location, Claude blocks it and enters them instead. Claude closes newsletter and cookie pop-ups and never signs you up. When a pop-up offers a discount for signing up, Claude notes the offer on that source and lists it in its report at the end. When Claude has read the pages, it records the prices from the dashboard tab through `POST /api/items/<id>/observations`, so it uses your signed-in session. Each item becomes one Chrome check: it sends no alert, and it clears the **Bot check** mark.
+The prompt tells Claude to read each page at a normal pace, to stop at a CAPTCHA and ask you, and never to try to get past a block. It gives the delivery suburb and postcode from **Settings** (or the item's own override). When a store asks where you are, Claude enters them, and picks the nearest store when the site needs one; when the browser asks to share your location, Claude blocks it and enters them instead. Claude closes newsletter and cookie pop-ups and never signs you up. When a pop-up offers a discount for signing up, Claude notes the offer on that source and lists it in its report.
 
-The `sweep` command puts the **Dashboard URL** setting in the prompt. When the setting is empty, replace `<your dashboard address>` in the prompt with the dashboard address.
+Claude ends its reply with one JSON block per item, each with an `itemId`. **Record** sends each block to `POST /api/items/<id>/observations` and shows what it recorded for each item, or what to fix. Each item becomes one Chrome check: it sends no alert, and it clears the **Bot check** mark. Without the dashboard, save a block (minus `itemId`) as a file and use the `record` command below.
 
 ## Write the file
 
