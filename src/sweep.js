@@ -80,8 +80,10 @@ const locationRules = ({ postcode, locality }) => [
   `  stock or a price, enter the ${locality} and ${postcode} listed for that item.`,
   `  If the site asks you to pick a store, pick the one nearest that ${postcode}.`,
   `  If the item lists none, close the prompt and carry on.`,
-  '- If the browser asks to share my location, block it and enter the ' +
-    `${locality} and ${postcode} instead.`
+  '- You cannot see or press Chrome\'s own pop-ups, such as "wants to know your location".',
+  '  If a page stalls, shows nothing, or waits on a location, stop and ask me to answer any',
+  '  browser pop-up. Wait for my reply, then check the page again.',
+  '- Before you mark a source blocked or error, tell me why and wait for my reply.'
 ]
 
 const EXAMPLE = {
