@@ -31,6 +31,7 @@ test('a sweep lists site and free-check rows whose latest automatic check was bl
     itemName: 'DeWalt drill',
     product: 'A DeWalt DCD791 drill',
     categories: [{ id: 'kit', description: 'Drill with batteries' }],
+    delivery: null,
     sources: [
       { kind: 'site', name: 'Home Depot', at: BLOCK.at, note: 'HTTP 503', url: BLOCK.url,
         botCheck: false },
@@ -71,4 +72,17 @@ test('the JSON shape in the prompt passes the observation validator once filled 
     .replaceAll('"effectivePrice": 0', '"effectivePrice": 199'))
   const result = validateResearch({ data: filled, categoryIds: ['kit'] })
   assert.deepEqual(result.errors, [])
+})
+
+test('the sweep prompt gives the delivery place and says how to answer location prompts', () => {
+  const rows = [row({ name: 'Home Depot', recent: [BLOCK] })]
+  const delivery = { suburb: 'Springfield', postcode: '12345' }
+  const labels = { postcode: 'ZIP code', locality: 'city' }
+  const item = sweepItem({ item: ITEM, rows, delivery })
+  const prompt = sweepPrompt({ items: [item], dashboardUrl: 'http://x', labels })
+  assert.match(prompt, /My city and ZIP code: Springfield 12345/)
+  assert.match(prompt, /A store or ZIP code prompt is not a block/)
+  assert.match(prompt, /block it and enter the city and ZIP code instead/)
+  const bare = sweepItem({ item: ITEM, rows, delivery: { suburb: null, postcode: '2221' } })
+  assert.match(sweepPrompt({ items: [bare] }), /My postcode: 2221/)
 })

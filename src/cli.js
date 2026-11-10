@@ -100,7 +100,8 @@ const commands = {
     const items = sweepItems({ db, records: itemRecords({ db }), now: new Date() })
     if (items.length === 0) return console.log('No blocked pages to check in Chrome')
     const dashboardUrl = dashboardUrlFrom(resolveSettings({ db })) || undefined
-    console.log(sweepPrompt({ items, dashboardUrl }))
+    const labels = activeRegion({ db }).deliveryLabels
+    console.log(sweepPrompt({ items, dashboardUrl, labels }))
   },
 
   status: async () => {

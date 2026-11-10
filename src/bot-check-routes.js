@@ -1,6 +1,7 @@
 import { BOT_CHECK_SEEN_REASON, botCheckFlags, seenKey, seenRecord } from './bot-checks.js'
 import { inTransaction, insertFeedback } from './db.js'
 import { activeRegion } from './region.js'
+import { deliveryFrom, resolveSettings } from './settings.js'
 import { siteStats } from './site-stats.js'
 import { SWEEP_DAYS, sweepItem } from './sweep.js'
 import { loadTuningInputs } from './tuning-data.js'
@@ -14,7 +15,8 @@ export const addBotCheckRoutes = ({ app, db, now, getItems }) => {
   const openFlags = () => unseenBotChecks({ db, records: getItems(), now: now() })
 
   app.get('/api/sweep', (req, res) => {
-    res.json({ items: sweepItems({ db, records: getItems(), now: now() }) })
+    const items = sweepItems({ db, records: getItems(), now: now() })
+    res.json({ items, labels: activeRegion({ db }).deliveryLabels })
   })
 
   app.get('/api/bot-checks', (req, res) => {
@@ -49,7 +51,9 @@ export const unseenBotChecks = ({ db, records, now }) => activeStats({
 export const sweepItems = ({ db, records, now }) => activeStats({
   db, records, now, days: SWEEP_DAYS
 })
-  .map(({ item, rows }) => sweepItem({ item, rows }))
+  .map(({ item, rows }) => sweepItem({
+    item, rows, delivery: deliveryFrom(resolveSettings({ db, item }))
+  }))
   .filter(Boolean)
 
 const activeStats = ({ db, records, now, days }) => {

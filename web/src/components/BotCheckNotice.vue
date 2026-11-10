@@ -41,8 +41,8 @@ const markSeen = async () => {
 const copySweep = async () => {
   problem.value = null
   try {
-    const { items } = await getSweep()
-    const prompt = sweepPrompt({ items, dashboardUrl: window.location.origin })
+    const { items, labels } = await getSweep()
+    const prompt = sweepPrompt({ items, labels, dashboardUrl: window.location.origin })
     if (!await copyText(prompt)) throw new Error('Copy failed. Run the sweep command instead.')
     copied.value = true
     clearTimeout(resetTimer)
