@@ -145,13 +145,13 @@ The app reads bot checks from the stored runs; nothing new is stored per run. A 
 
 A free check that gets a challenge page records `blocked` with the note "challenge page instead of product page" (or "product JSON"), and an HTTP `403` records `blocked` with the note `HTTP 403`, so both count. An HTTP `429` rate limit, a timeout, and an `error` result never count.
 
-`isBotCheck` and `botCheckOf` in `src/bot-checks.js` hold the rule. For each site and free check of an active item, the app takes the latest check in the last `30` days, including Chrome checks:
+`isBotCheck` and `botCheckOf` in `src/bot-checks.js` hold the rule. For each site and free check of an active item, the app takes the latest check in the last `30` days. A Chrome check counts only when its status is `ok` or `not_found`; a Chrome check with `blocked` or `error` is skipped, so the earlier result stands:
 
-| Latest check                            | Result        |
-| --------------------------------------- | ------------- |
-| AI research or free check, a bot check  | **Bot check** |
-| Anything else, or a Chrome check        | No mark       |
-| Any check, site muted or free check off | No mark       |
+| Latest check                                        | Result        |
+| --------------------------------------------------- | ------------- |
+| AI research or free check, a bot check              | **Bot check** |
+| Anything else, or a Chrome check that read the page | No mark       |
+| Any check, site muted or free check off             | No mark       |
 
 **Got it** on the dashboard writes one `feedback` row per site, with `reason` `bot-check-seen` and `changes_json` `{ kind, key, blockedAt }`. The dashboard notice hides a site while a seen row matches its item, kind, key, and latest bot-check time. A newer bot check has a new time, so the notice shows again. The **Bot check** mark on the item page stays until a later check of the site gives another result. No phone alert is sent; the monthly heartbeat adds a line "Asked for a bot check" with the sites from its run.
 

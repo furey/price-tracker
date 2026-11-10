@@ -21,6 +21,8 @@ test('a sweep lists site and free-check rows whose latest automatic check was bl
     row({ name: 'Lowes', kind: 'direct', recent: [{ ...BLOCK, note: 'CAPTCHA', url: null }] }),
     row({ name: 'Amazon', recent: [{ ...BLOCK, status: 'ok' }, BLOCK] }),
     row({ name: 'Walmart', recent: [{ ...BLOCK, mode: 'manual', status: 'ok' }, BLOCK] }),
+    row({ name: 'Kmart', recent: [{ ...BLOCK, mode: 'manual', status: 'not_found' }, BLOCK] }),
+    row({ name: 'Mitre 10', recent: [{ ...BLOCK, mode: 'manual', status: 'error' }, BLOCK] }),
     row({ name: 'Target', state: 'muted', recent: [BLOCK] }),
     row({ name: 'Best Buy', state: 'off', recent: [BLOCK] }),
     row({ name: 'Kogan', kind: 'other', recent: [BLOCK] }),
@@ -35,7 +37,9 @@ test('a sweep lists site and free-check rows whose latest automatic check was bl
     sources: [
       { kind: 'site', name: 'Home Depot', at: BLOCK.at, note: 'HTTP 503', url: BLOCK.url,
         botCheck: false },
-      { kind: 'direct', name: 'Lowes', at: BLOCK.at, note: 'CAPTCHA', url: null, botCheck: true }
+      { kind: 'direct', name: 'Lowes', at: BLOCK.at, note: 'CAPTCHA', url: null, botCheck: true },
+      { kind: 'site', name: 'Mitre 10', at: BLOCK.at, note: 'HTTP 503', url: BLOCK.url,
+        botCheck: false }
     ]
   })
 })

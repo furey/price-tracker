@@ -35,7 +35,7 @@ The app sends no phone alert for a bot check. The monthly heartbeat lists the si
 
 Handle a bot check in your own time. These steps help, in order:
 
-1. **Chrome check**: open the product page in your own browser, then record the price with the `record` command or the observations API. Claude in Chrome can read the page for you in your real browser session, or you can read it yourself. The run counts as a manual run and sends no alert. A Chrome check newer than the bot check clears the **Bot check** mark.
+1. **Chrome check**: open the product page in your own browser, then record the price with the `record` command or the observations API. Claude in Chrome can read the page for you in your real browser session, or you can read it yourself. The run counts as a manual run and sends no alert. A Chrome check newer than the bot check clears the **Bot check** mark when it read the page (status `ok` or `not_found`). A Chrome check marked `blocked` or `error` leaves the mark.
 2. **Free check**: if the shop is Shopify or publishes JSON-LD, add a free check of the exact product page. See [Free direct checks](/guide/direct-checks).
 3. **Tuning**: set a site that asks every time to **Check weekly**, or press **Mute site**, to save AI runs. A muted site shows no **Bot check** mark.
 
@@ -43,7 +43,7 @@ A Chrome check that reads a site the AI could not also triggers the tuning sugge
 
 ## Chrome sweep
 
-A Chrome sweep checks every blocked page in one go, with Claude in Chrome in your own browser. It lists each site and free check of an active item whose latest scheduled check in the last `30` days was blocked, for any reason. A muted site, a site set to off, and a site with a newer Chrome check are not on the list.
+A Chrome sweep checks every blocked page in one go, with Claude in Chrome in your own browser. It lists each site and free check of an active item whose latest scheduled check in the last `30` days was blocked, for any reason. A muted site, a site set to off, and a site with a newer Chrome check that read the page (status `ok` or `not_found`) are not on the list. A Chrome check marked `blocked` or `error` keeps the site on the list.
 
 The app never starts a sweep. You start it, and you stay at the browser while it runs. While blocked pages exist, a **Chrome sweep** card sits above the item cards.
 

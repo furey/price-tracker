@@ -6,9 +6,12 @@ export const BOT_CHECK_HINT = 'Open the page in your own browser when you have t
 export const isBotCheck = ({ status, note } = {}) =>
   status === 'blocked' && BOT_CHECK_PATTERN.test(String(note ?? ''))
 
+export const latestDecidingCheck = (recent = []) => recent
+  .find(({ mode, status }) => mode !== MANUAL_MODE || CLEARING_STATUSES.includes(status))
+
 export const botCheckOf = (row) => {
   if (OFF_STATES.includes(row?.state)) return null
-  const [latest] = row?.recent ?? []
+  const latest = latestDecidingCheck(row?.recent)
   if (!latest || latest.mode === MANUAL_MODE || !isBotCheck(latest)) return null
   return {
     at: latest.at,
@@ -43,6 +46,7 @@ export const seenRecord = ({ kind, key, at }) => ({ kind, key, blockedAt: at })
 export const seenKey = ({ itemId, kind, key, at }) => JSON.stringify([itemId, kind, key, at])
 
 const MANUAL_MODE = 'manual'
+const CLEARING_STATUSES = ['ok', 'not_found']
 const OFF_STATES = ['muted', 'off']
 const FLAGGED_KINDS = ['site', 'direct']
 const BOT_CHECK_PATTERN = new RegExp([
