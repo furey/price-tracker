@@ -48,7 +48,8 @@ export const sweepPrompt = ({ items, dashboardUrl, labels = AU_LABELS }) => [
   'Use one entry in "sources" per page, with status ok, blocked, error, or not_found.',
   'Use one entry in "listings" per product you can see, with a category id from that item,',
   'or "reject" with a rejectReason. Use null for a number you cannot see.',
-  'A 201 reply means the app recorded the prices. Tell me what you recorded and what failed.'
+  'A 201 reply means the app recorded the prices. Tell me what you recorded, what failed,',
+  'and every sign-up discount you saw.'
 ].join('\n')
 
 const SWEEP_KINDS = ['site', 'direct']
@@ -62,7 +63,10 @@ const RULES = [
   'Read the price that a shopper sees on the page. Do not use hidden page data.',
   'If a CAPTCHA, bot check, or sign-in page shows, stop and ask me to solve it.',
   'Never try to get past a block. If I do not solve it, mark the source blocked.',
-  'Record only what the page shows. Never guess a price or a stock level.'
+  'Record only what the page shows. Never guess a price or a stock level.',
+  'Close newsletter, cookie, and other pop-ups that cover the page, then carry on.',
+  'Never sign me up, subscribe, or enter my email. If a pop-up offers a discount for signing up,',
+  '  close it, put the offer and its terms in that source\'s note, and list it in your report.'
 ]
 
 const locationRules = ({ postcode, locality }) => [
