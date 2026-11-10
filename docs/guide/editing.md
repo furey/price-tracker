@@ -68,6 +68,8 @@ Two more fields apply to the whole item:
 
 **What the AI looks for** describes the exact product, and what to reject, such as other sizes, look-alikes, or parts sold alone. Write it plainly; the AI reads it on every check.
 
+Tick **Refurbished is OK** to accept units refurbished by the maker, or certified refurbished by a retailer, with a warranty. It adds a `refurbished` category with an alert price of `85%` of your first category's; change that under **Alert prices**. Used and open-box stock stays out. Untick it to remove the category.
+
 Under **Categories**, each category has an **Id** and a **Description**. Press **Mute** to stop a category from alerting, or **Remove category** to delete it. Type a **New category id** and **Description**, then press **Add category**.
 
 ## Where to look

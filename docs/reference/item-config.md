@@ -30,25 +30,26 @@ A save must name the version it started from (`baseVersion`). If another save ha
 
 ## Fields
 
-| Field             | Required                   | Rule                                                                              |
-| ----------------- | -------------------------- | --------------------------------------------------------------------------------- |
-| `id`              | yes                        | non-empty; must equal the seed file name without `.json`; cannot change           |
-| `name`            | yes                        | non-empty; used in alert titles                                                   |
-| `enabled`         | no                         | read once, on the first import; `false` imports the item as paused                |
-| `product`         | yes                        | non-empty plain text; goes into the research prompt as written                    |
-| `categories`      | yes                        | non-empty list of `{ id, description }`, in order of preference                   |
-| `rules`           | yes                        | object keyed by category id; see [Rules](#rules)                                  |
-| `schedules`       | yes                        | list of [schedules](#schedules) for AI research; an empty list turns research off |
-| `direct`          | no                         | list of [direct entries](#direct-entries)                                         |
-| `directSchedules` | when `direct` is not empty | list of schedules for direct checks                                               |
-| `kits`            | no                         | list of [kits](#kits)                                                             |
-| `ntfy`            | yes                        | see [ntfy](#ntfy)                                                                 |
-| `sources`         | yes                        | see [Sources](#sources)                                                           |
-| `dedupe`          | no                         | `{ minDrop }`, a number of `0` or more; see [Dedupe](#dedupe)                     |
-| `heartbeat`       | no                         | `{ monthly }`, `true` or `false`                                                  |
-| `deadline`        | no                         | `{ needBy, deliveryDays, lastChanceDays }`; see [Deadline](#deadline)             |
-| `research`        | no                         | see [Research options](#research-options)                                         |
-| `tuning`          | no                         | see [Tuning](#tuning)                                                             |
+| Field             | Required                   | Rule                                                                                                                                                  |
+| ----------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`              | yes                        | non-empty; must equal the seed file name without `.json`; cannot change                                                                               |
+| `name`            | yes                        | non-empty; used in alert titles                                                                                                                       |
+| `enabled`         | no                         | read once, on the first import; `false` imports the item as paused                                                                                    |
+| `product`         | yes                        | non-empty plain text; goes into the research prompt as written                                                                                        |
+| `categories`      | yes                        | non-empty list of `{ id, description }`, in order of preference                                                                                       |
+| `rules`           | yes                        | object keyed by category id; see [Rules](#rules)                                                                                                      |
+| `schedules`       | yes                        | list of [schedules](#schedules) for AI research; an empty list turns research off                                                                     |
+| `direct`          | no                         | list of [direct entries](#direct-entries)                                                                                                             |
+| `directSchedules` | when `direct` is not empty | list of schedules for direct checks                                                                                                                   |
+| `kits`            | no                         | list of [kits](#kits)                                                                                                                                 |
+| `ntfy`            | yes                        | see [ntfy](#ntfy)                                                                                                                                     |
+| `sources`         | yes                        | see [Sources](#sources)                                                                                                                               |
+| `dedupe`          | no                         | `{ minDrop }`, a number of `0` or more; see [Dedupe](#dedupe)                                                                                         |
+| `heartbeat`       | no                         | `{ monthly }`, `true` or `false`                                                                                                                      |
+| `accept`          | no                         | `{ refurbished }`, `true` or `false`; `true` needs a `refurbished` category; see [Research rules](/reference/research-contract#prompt-research-rules) |
+| `deadline`        | no                         | `{ needBy, deliveryDays, lastChanceDays }`; see [Deadline](#deadline)                                                                                 |
+| `research`        | no                         | see [Research options](#research-options)                                                                                                             |
+| `tuning`          | no                         | see [Tuning](#tuning)                                                                                                                                 |
 
 A category `id` uses lowercase letters, digits, and hyphens, and must be unique. `reject` is reserved.
 

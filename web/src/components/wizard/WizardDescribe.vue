@@ -20,6 +20,7 @@ const form = reactive({
   needBy: '',
   quantity: 1,
   mustHaves: [],
+  refurbished: false,
   links: ['']
 })
 const newMustHave = ref('')
@@ -65,7 +66,8 @@ const start = async () => {
       needBy: form.needBy || null,
       quantity: Number(form.quantity) || 1,
       mustHaves: form.mustHaves,
-      links: form.links.map((link) => link.trim()).filter(Boolean)
+      links: form.links.map((link) => link.trim()).filter(Boolean),
+      refurbished: form.refurbished
     })
     emit('created', draft)
   } catch (error) {
@@ -158,6 +160,14 @@ onMounted(async () => {
           <a v-else href="#/settings/deliveryPostcode">Set a {{ postcodeNoun }}</a>
         </p>
       </div>
+    </div>
+    <div class="field">
+      <label class="check">
+        <input v-model="form.refurbished" type="checkbox" />
+        Refurbished is OK
+      </label>
+      <p class="hint">Adds a refurbished category with its own alert price. Only units
+        refurbished by the maker or a retailer, with a warranty. Used and open-box stay out.</p>
     </div>
     <div class="field">
       <label for="draft-must-have">Must-haves</label>

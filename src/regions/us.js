@@ -1,3 +1,5 @@
+import { secondHandKinds } from './second-hand.js'
+
 export const us = {
   id: 'us',
   country: 'United States',
@@ -89,9 +91,9 @@ export const us = {
       },
       {
         key: 'secondHand',
-        text: ({ ref }) => 'Reject Craigslist, Facebook Marketplace, and any refurbished, used, ' +
-          'renewed, or open-box item. Reject marketplace third-party sellers, except on eBay as ' +
-          `rule ${ref('ebay')} allows.`
+        text: ({ ref, refurbished }) => 'Reject Craigslist, Facebook Marketplace, and any ' +
+          `${secondHandKinds({ ref, refurbished, renewed: true })}. Reject marketplace ` +
+          `third-party sellers, except on eBay as rule ${ref('ebay')} allows.`
       },
       {
         key: 'ebay',

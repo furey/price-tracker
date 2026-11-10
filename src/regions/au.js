@@ -1,3 +1,5 @@
+import { secondHandKinds } from './second-hand.js'
+
 export const au = {
   id: 'au',
   country: 'Australia',
@@ -95,9 +97,9 @@ export const au = {
       },
       {
         key: 'secondHand',
-        text: ({ ref }) => 'Reject Gumtree, Facebook Marketplace, and any refurbished, used, or ' +
-          'open-box item. Reject marketplace third-party sellers, except on eBay AU as rule ' +
-          `${ref('ebay')} allows.`
+        text: ({ ref, refurbished }) => 'Reject Gumtree, Facebook Marketplace, and any ' +
+          `${secondHandKinds({ ref, refurbished })}. Reject marketplace third-party sellers, ` +
+          `except on eBay AU as rule ${ref('ebay')} allows.`
       },
       {
         key: 'ebay',

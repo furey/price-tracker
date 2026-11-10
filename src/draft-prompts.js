@@ -243,6 +243,9 @@ const requestSection = ({ input, delivery, memberships, region }) => [
   `Quantity: ${input.quantity ?? 1}${(input.quantity ?? 1) > 1 ? ' (caps stay per unit)' : ''}`,
   `Must-haves: ${input.mustHaves?.length ? input.mustHaves.join('; ') : 'none given'}`,
   `Links the buyer found: ${input.links?.length ? input.links.join(' ') : 'none'}`,
+  ...(input.refurbished
+    ? ['Refurbished OK: yes. The app adds a "refurbished" category itself; do not add one.']
+    : []),
   `Delivery to: ${describePlace({ delivery, region })}`,
   `Memberships the buyer holds: ${memberships?.length ? memberships.join(', ') : 'none'}`
 ].join('\n')

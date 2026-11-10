@@ -71,7 +71,8 @@ export const validateInput = ({ body, now = new Date(), timeZone = DEFAULT_TIME_
     needBy,
     quantity,
     mustHaves,
-    links: links.map(publicUrl)
+    links: links.map(publicUrl),
+    ...(value.refurbished === true ? { refurbished: true } : {})
   }
 }
 

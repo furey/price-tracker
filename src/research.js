@@ -8,6 +8,7 @@ import { formatPrice } from './text.js'
 import {
   promptCategories, promptNeverRules, promptSearches, promptSeasonalSearches, promptSites
 } from './tuning.js'
+import { acceptsRefurbished } from './refurbished.js'
 import { validateResearch } from './validate.js'
 
 const DEFAULT_MAX_TURNS = 80
@@ -35,7 +36,7 @@ export const buildPrompt = ({
 }) => {
   const today = localToday({ now, timeZone: region.timeZone })
   const maxTurns = item.research?.maxTurns ?? DEFAULT_MAX_TURNS
-  const rules = researchRules({ today, maxTurns, region })
+  const rules = researchRules({ today, maxTurns, region, item })
   const ref = ruleNumbers(rules)
   return [
     introSection({ today, region }),
@@ -301,7 +302,7 @@ const kitLines = (kit) => [
     : `- ${part.id}: ${part.description}`)
 ]
 
-const researchRules = ({ today, maxTurns, region }) => [
+const researchRules = ({ today, maxTurns, region, item }) => [
   {
     key: 'search',
     text: () => 'Search every source and every search phrase listed under SOURCES.'
@@ -319,6 +320,7 @@ const researchRules = ({ today, maxTurns, region }) => [
       'Set verified to false if you did not.'
   },
   ...region.research.marketRules,
+  ...(acceptsRefurbished(item) ? [REFURBISHED_RULE] : []),
   {
     key: 'blocked',
     text: () => 'If a site blocks you or refuses to load, set that source status to "blocked" ' +
@@ -346,7 +348,19 @@ const researchRules = ({ today, maxTurns, region }) => [
     key: 'turns',
     text: () => `You have at most ${maxTurns} turns. Do not spend them all on one site.`
   }
-].map((rule) => ({ ...rule, context: { today, currency: region.currency } }))
+].map((rule) => ({
+  ...rule,
+  context: { today, currency: region.currency, refurbished: acceptsRefurbished(item) }
+}))
+
+const REFURBISHED_RULE = {
+  key: 'refurbished',
+  text: () => 'This item accepts refurbished stock: a unit refurbished by the manufacturer, ' +
+    'or sold as certified refurbished by a retailer under SOURCES, with a stated warranty. ' +
+    'Put every such unit in category "refurbished", never in another category, and give the ' +
+    'refurbisher and the warranty in notes. Reject used, open-box, and refurbished units from ' +
+    'marketplace third-party sellers.'
+}
 
 const ruleNumbers = (rules) => {
   const numbers = new Map(rules.map(({ key }, index) => [key, index + 1]))

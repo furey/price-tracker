@@ -323,7 +323,7 @@ onUnmounted(() => window.removeEventListener('beforeunload', warnBeforeLeaving))
 
       <section id="look-for" class="card edit-card">
         <h2>What to look for</h2>
-        <SectionErrors :prefixes="['product', 'categories']" />
+        <SectionErrors :prefixes="['product', 'categories', 'accept']" />
         <EditLookFor :config="draft.config" :original="original" :renames="renames" />
       </section>
 

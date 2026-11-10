@@ -1,3 +1,5 @@
+import { secondHandKinds } from './second-hand.js'
+
 export const generic = {
   id: 'generic',
   country: null,
@@ -39,9 +41,9 @@ export const generic = {
       },
       {
         key: 'secondHand',
-        text: () => 'Reject classified-ad sites, and any refurbished, used, or open-box item. ' +
-          'Reject marketplace third-party sellers unless the brand or a known retailer sells ' +
-          'the item.'
+        text: ({ ref, refurbished }) => 'Reject classified-ad sites, and any ' +
+          `${secondHandKinds({ ref, refurbished })}. Reject marketplace third-party sellers ` +
+          'unless the brand or a known retailer sells the item.'
       }
     ]
   },

@@ -79,6 +79,8 @@ The `us` rules:
 
 The `generic` rules accept only retailers that sell new in the install currency, and reject classified-ad sites, second-hand items, and marketplace sellers.
 
+An item with `accept.refurbished` set to `true` gets one more rule after the market rules. It accepts units refurbished by the manufacturer, or certified refurbished by a retailer under SOURCES, with a stated warranty, and puts them in the `refurbished` category. The second-hand rule then rejects only used and open-box items (and renewed items for `us`), and points to the refurbished rule. Refurbished units from marketplace sellers stay rejected. Items without the flag get the same prompt as before.
+
 ### Prompt: regions
 
 `REGION` picks one profile for the whole install: `au` (the default), `us`, or `generic`. The profile sets the currency, the date in the intro, the market rules, the fetch allowlist, and the wording of the job and delivery lines. See [Configuration](/reference/configuration#region).

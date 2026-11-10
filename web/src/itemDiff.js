@@ -46,7 +46,7 @@ export const describeChanges = ({ before, after, renames = {} }) => [
 const HANDLED_KEYS = new Set([
   'id', 'name', 'product', 'ntfy', 'schedules', 'directSchedules', 'categories', 'rules',
   'dedupe', 'heartbeat', 'sources', 'direct', 'kits', 'research', 'enabled', 'tuning',
-  'deadline'
+  'deadline', 'accept'
 ])
 
 const RULE_FIELDS = [
@@ -150,6 +150,12 @@ const alertOptionChanges = ({ before, after }) => [
     label: 'Monthly heartbeat',
     from: before.heartbeat?.monthly ? 'On' : 'Off',
     to: after.heartbeat?.monthly ? 'On' : 'Off'
+  }),
+  change({
+    section: 'What to look for',
+    label: 'Refurbished is OK',
+    from: before.accept?.refurbished ? 'Yes' : 'No',
+    to: after.accept?.refurbished ? 'Yes' : 'No'
   }),
   change({
     section: 'Alert prices',

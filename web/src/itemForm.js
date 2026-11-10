@@ -11,7 +11,7 @@ export const SECTIONS = [
     label: 'Alert prices',
     prefixes: ['rules', 'dedupe', 'heartbeat', 'deadline']
   },
-  { id: 'look-for', label: 'What to look for', prefixes: ['product', 'categories'] },
+  { id: 'look-for', label: 'What to look for', prefixes: ['product', 'categories', 'accept'] },
   { id: 'look-where', label: 'Where to look', prefixes: ['sources'] },
   { id: 'free-checks', label: 'Free checks', prefixes: ['direct'] },
   { id: 'kits', label: 'Kits', prefixes: ['kits'] },

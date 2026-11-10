@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import { DEFAULT_LAST_CHANCE_DAYS } from './last-chance.js'
+import { applyRefurbished } from './refurbished.js'
 import { DEFAULT_DELIVERY_DAYS } from './draft-schedule.js'
 import { topicName } from './topics.js'
 import { publicUrl as sharedPublicUrl } from './url-rules.js'
@@ -204,6 +205,7 @@ export const assembleConfig = ({
     config.direct = direct
     config.directSchedules = directSchedules
   }
+  if (input?.refurbished) applyRefurbished({ config, accepted: true })
   if (input?.needBy) {
     config.deadline = {
       needBy: input.needBy,
@@ -254,7 +256,8 @@ const CONTROL_CHARS_KEEP_NEWLINE =
 
 const KNOWN_KEYS = [
   'id', 'name', 'product', 'categories', 'rules', 'sources', 'schedules', 'direct',
-  'directSchedules', 'ntfy', 'research', 'dedupe', 'heartbeat', 'kits', 'deadline'
+  'directSchedules', 'ntfy', 'research', 'dedupe', 'heartbeat', 'kits', 'deadline',
+  'accept'
 ]
 
 const parseQuestions = (value) => {

@@ -19,6 +19,7 @@ export const validateItem = (item, fileName = null) => {
     ...validateDedupe(item),
     ...validateHeartbeat(item),
     ...validateDeadline(item),
+    ...validateAccept(item),
     ...validateResearchOptions(item),
     ...validateTuning(item)
   ]
@@ -274,6 +275,18 @@ const validateHeartbeat = (item) => {
   return typeof item.heartbeat?.monthly === 'boolean'
     ? []
     : ['heartbeat.monthly: expected true or false']
+}
+
+const validateAccept = (item) => {
+  const { accept } = item
+  if (accept === undefined) return []
+  if (!isObject(accept)) return ['accept: expected an object']
+  if (accept.refurbished === undefined) return []
+  if (typeof accept.refurbished !== 'boolean') return ['accept.refurbished: expected true or false']
+  const hasCategory = (item.categories ?? []).some(({ id } = {}) => id === 'refurbished')
+  return accept.refurbished && !hasCategory
+    ? ['accept.refurbished: add a "refurbished" category for refurbished stock']
+    : []
 }
 
 const validateDeadline = (item) => {

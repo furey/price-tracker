@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
+import { acceptsRefurbished, applyRefurbished } from '../../../../src/refurbished.js'
 import { isCategoryMuted } from '../../../../src/tuning.js'
 import { useInvalid } from '../../formContext.js'
 import {
@@ -20,6 +21,8 @@ const invalid = useInvalid()
 const pendingIds = reactive({})
 const newCategory = reactive({ id: '', description: '' })
 const addError = ref('')
+
+const setRefurbished = (accepted) => applyRefurbished({ config: props.config, accepted })
 
 const originalIds = () => (props.original.categories ?? []).map(({ id }) => id)
 
@@ -96,6 +99,21 @@ const add = () => {
         alone). The AI research reads this text as written.
       </p>
       <FieldError path="product" />
+    </div>
+
+    <div class="field">
+      <label class="check">
+        <input
+          type="checkbox"
+          :checked="acceptsRefurbished(config)"
+          @change="setRefurbished($event.target.checked)"
+        />
+        Refurbished is OK
+      </label>
+      <p class="hint">Adds a refurbished category with its own alert price, set under Alert
+        prices. Only units refurbished by the maker or a retailer, with a warranty. Used and
+        open-box stay out. Turning it off removes the category.</p>
+      <FieldError path="accept.refurbished" />
     </div>
 
     <h3 class="sub-head">Categories</h3>
