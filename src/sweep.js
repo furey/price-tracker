@@ -48,6 +48,8 @@ export const sweepPrompt = ({ items, dashboardUrl, labels = AU_LABELS }) => [
   'Use one entry in "sources" per page, with status ok, blocked, error, or not_found.',
   'Use one entry in "listings" per product you can see, with a category id from that item,',
   'or "reject" with a rejectReason. Use null for a number you cannot see.',
+  'isClearance, inStock, and verified must be true or false, never null. Use false when the page',
+  'does not show it.',
   'A 201 reply means the app recorded the prices. Tell me what you recorded, what failed,',
   'and every sign-up discount you saw.'
 ].join('\n')
@@ -73,6 +75,7 @@ const RULES = [
 const locationRules = ({ postcode, locality }) => [
   `- A store or ${postcode} prompt is not a block. When a site asks where you are, to show`,
   `  stock or a price, enter the ${locality} and ${postcode} listed for that item.`,
+  `  If the site asks you to pick a store, pick the one nearest that ${postcode}.`,
   `  If the item lists none, close the prompt and carry on.`,
   '- If the browser asks to share my location, block it and enter the ' +
     `${locality} and ${postcode} instead.`

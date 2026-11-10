@@ -86,6 +86,8 @@ test('the sweep prompt gives the delivery place and says how to answer location 
   const prompt = sweepPrompt({ items: [item], dashboardUrl: 'http://x', labels })
   assert.match(prompt, /My city and ZIP code: Springfield 12345/)
   assert.match(prompt, /A store or ZIP code prompt is not a block/)
+  assert.match(prompt, /pick the one nearest that ZIP code/)
+  assert.match(prompt, /inStock, and verified must be true or false, never null/)
   assert.match(prompt, /block it and enter the city and ZIP code instead/)
   const bare = sweepItem({ item: ITEM, rows, delivery: { suburb: null, postcode: '2221' } })
   assert.match(sweepPrompt({ items: [bare] }), /My postcode: 2221/)
