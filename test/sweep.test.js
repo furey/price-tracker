@@ -26,7 +26,9 @@ test('a sweep lists site and free-check rows whose latest automatic check was bl
     row({ name: 'Target', state: 'muted', recent: [BLOCK] }),
     row({ name: 'Best Buy', state: 'off', recent: [BLOCK] }),
     row({ name: 'Kogan', kind: 'other', recent: [BLOCK] }),
-    row({ name: 'Acme', recent: [] })
+    row({ name: 'Acme', recent: [] }),
+    row({ name: 'Bunnings', recent: [{ ...BLOCK, note: 'HTTP 429' }] }),
+    row({ name: 'Myer', kind: 'direct', recent: [{ ...BLOCK, note: 'skipped after HTTP 429' }] })
   ]
   assert.deepEqual(sweepItem({ item: ITEM, rows }), {
     itemId: 'drill',
@@ -128,4 +130,31 @@ test('a pasted reply gives one result per json block and names each bad block', 
   assert.deepEqual(parseSweepReply('no blocks here'), {
     results: [], problems: ['No ```json block found.']
   })
+})
+
+test('a Chrome check that read a free check page clears it from the sweep', async () => {
+  const { siteStats } = await import('../src/site-stats.js')
+  const { directSourceName } = await import('../src/direct.js')
+  const url = 'https://www.myer.com.au/p/springfree'
+  const entry = { retailer: 'Myer', url, category: 'kit', parser: 'jsonld' }
+  const tramp = { ...ITEM, sources: { sites: [] }, direct: [entry] }
+  const listing = () => ({ retailer: 'Myer', title: 'Drill', category: 'kit', price: 100,
+    effectivePrice: 100, inStock: true, verified: true, url: `${url}?variant=1` })
+  const blocked = {
+    id: 1, mode: 'direct', startedAt: '2027-02-08T00:00:00.000Z', itemVersion: 1,
+    research: {
+      sources: [{ name: directSourceName(entry), status: 'blocked', note: 'HTTP 403' }],
+      listings: []
+    }
+  }
+  const chrome = {
+    id: 2, mode: 'manual', startedAt: '2027-02-09T00:00:00.000Z', itemVersion: 1,
+    research: { sources: [{ name: 'Myer', status: 'ok', note: '' }], listings: [listing()] }
+  }
+  const now = new Date('2027-02-10T00:00:00.000Z')
+  const before = siteStats({ item: tramp, runs: [blocked], now, days: 30 })
+  assert.deepEqual(sweepItem({ item: tramp, rows: before }).sources.map(({ kind }) => kind),
+    ['direct'])
+  const after = siteStats({ item: tramp, runs: [blocked, chrome], now, days: 30 })
+  assert.equal(sweepItem({ item: tramp, rows: after }), null)
 })

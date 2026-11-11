@@ -1,4 +1,4 @@
-import { isBotCheck, latestDecidingCheck } from './bot-checks.js'
+import { isBotCheck, isRateLimited, latestDecidingCheck } from './bot-checks.js'
 
 export const SWEEP_DAYS = 30
 
@@ -7,6 +7,7 @@ export const sweepItem = ({ item, rows, delivery = null }) => {
     .filter(({ kind, state }) => SWEEP_KINDS.includes(kind) && !OFF_STATES.includes(state))
     .map((row) => ({ row, latest: latestDecidingCheck(row.recent) }))
     .filter(({ latest }) => latest && latest.mode !== MANUAL_MODE && latest.status === 'blocked')
+    .filter(({ latest }) => !isRateLimited(latest))
     .map(({ row, latest }) => ({
       kind: row.kind,
       name: row.name,

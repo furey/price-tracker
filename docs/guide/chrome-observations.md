@@ -43,12 +43,12 @@ A Chrome check that reads a site the AI could not also triggers the tuning sugge
 
 ## Chrome sweep
 
-A Chrome sweep checks every blocked page in one go, with Claude in Chrome in your own browser. It lists each site and free check of an active item whose latest scheduled check in the last `30` days was blocked, for any reason. A muted site, a site set to off, and a site with a newer Chrome check that read the page (status `ok` or `not_found`) are not on the list. A Chrome check marked `blocked` or `error` keeps the site on the list.
+A Chrome sweep checks every blocked page in one go, with Claude in Chrome in your own browser. It lists each site and free check of an active item whose latest scheduled check in the last `30` days was blocked. A rate limit (HTTP `429`) does not count; the next scheduled check usually gets through. A muted site, a site set to off, and a site with a newer Chrome check that read the page (status `ok` or `not_found`) are not on the list. A Chrome check marked `blocked` or `error` keeps the site on the list. A free check comes off the list when a Chrome check records a listing at its page address.
 
 The app never starts a sweep. You start it, and you stay at the browser while it runs. While blocked pages exist, a **Chrome sweep** card sits above the item cards.
 
 1. Press **Copy prompt** on the **Chrome sweep** card, or run `node src/cli.js sweep` (`docker exec price-tracker node src/cli.js sweep` with Docker).
-2. Paste the prompt into Claude in Chrome.
+2. Paste the prompt into Claude in Chrome. The card says so: the dashboard sweep needs the Claude in Chrome browser extension.
 3. Solve any CAPTCHA or bot check that Claude asks you to solve.
 4. Copy Claude's whole reply.
 5. Press **Record results** on the **Chrome sweep** card.

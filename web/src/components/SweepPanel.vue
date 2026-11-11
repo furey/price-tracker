@@ -9,6 +9,7 @@ import ModalSheet from './ModalSheet.vue'
 import ScreenshotThumbs from './ScreenshotThumbs.vue'
 
 const COPIED_MS = 2000
+const SWEEP_GUIDE = 'https://furey.github.io/price-tracker/guide/chrome-observations#chrome-sweep'
 
 const sweep = ref({ items: [], labels: undefined })
 const copied = ref(false)
@@ -119,6 +120,10 @@ onUnmounted(() => clearTimeout(resetTimer))
       {{ pageCount }} blocked {{ pageCount === 1 ? 'page' : 'pages' }} can be checked in your own
       browser. Paste the prompt into Claude in Chrome, then paste its reply back here.
     </p>
+    <p class="sweep-needs muted">
+      Needs the Claude in Chrome browser extension.
+      <a :href="SWEEP_GUIDE" target="_blank" rel="noreferrer">How the sweep works</a>
+    </p>
     <div class="sweep-actions">
       <button class="btn secondary small" type="button" @click="copyPrompt">
         {{ copied ? 'Copied' : 'Copy prompt' }}
@@ -204,8 +209,14 @@ onUnmounted(() => clearTimeout(resetTimer))
 }
 
 .sweep-lead {
-  margin: var(--space-2) 0 var(--space-3);
+  margin: var(--space-2) 0 var(--space-1);
   font-size: var(--text-small);
+  text-wrap: pretty;
+}
+
+.sweep-needs {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-caption);
   text-wrap: pretty;
 }
 

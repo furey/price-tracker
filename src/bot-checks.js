@@ -3,6 +3,9 @@ export const BOT_CHECK_SEEN_REASON = 'bot-check-seen'
 export const BOT_CHECK_HINT = 'Open the page in your own browser when you have time, then record '
   + 'the price as a Chrome check.'
 
+export const isRateLimited = ({ status, note } = {}) =>
+  status !== 'ok' && RATE_LIMIT_PATTERN.test(String(note ?? ''))
+
 export const isBotCheck = ({ status, note } = {}) =>
   status === 'blocked' && BOT_CHECK_PATTERN.test(String(note ?? ''))
 
@@ -46,6 +49,7 @@ export const seenRecord = ({ kind, key, at }) => ({ kind, key, blockedAt: at })
 export const seenKey = ({ itemId, kind, key, at }) => JSON.stringify([itemId, kind, key, at])
 
 const MANUAL_MODE = 'manual'
+const RATE_LIMIT_PATTERN = /\b429\b|rate[- ]limit/i
 const CLEARING_STATUSES = ['ok', 'not_found']
 const OFF_STATES = ['muted', 'off']
 const FLAGGED_KINDS = ['site', 'direct']

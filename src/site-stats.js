@@ -1,3 +1,4 @@
+import { isRateLimited } from './bot-checks.js'
 import { eligibleListings } from './decide.js'
 import { directSourceName } from './direct.js'
 import { DEFAULT_REGION } from './regions/index.js'
@@ -93,7 +94,6 @@ export const runsInWindow = ({ runs, now, days }) => {
 export const sameSiteName = (a, b) => nameKey(a) === nameKey(b)
 
 const DAY_MS = 86_400_000
-const RATE_LIMITED = /\b429\b|rate[- ]limit/i
 
 const emptyRow = ({ key, name, kind, url = null }) => ({
   key,
@@ -177,18 +177,19 @@ const addAiCheck = ({ row, status, note, at }) => {
   row.checks += 1
   row.statuses[status] += 1
   row.checkTimes.push(at)
-  if (status !== 'ok' && RATE_LIMITED.test(String(note ?? ''))) row.rateLimited += 1
+  if (isRateLimited({ status, note })) row.rateLimited += 1
 }
 
 const directStats = ({ item, runs, region }) => {
   const off = tuningOf(item).direct
-  const directRuns = runs.filter(({ mode }) => mode === DIRECT_MODE)
+  const directRuns = runs.filter(({ mode }) => [DIRECT_MODE, MANUAL_MODE].includes(mode))
   return (item.direct ?? []).map((entry) => {
     const row = emptyRow({
       key: entry.url, name: entry.retailer, kind: 'direct', url: linkUrl(entry.url)
     })
     const sourceName = directSourceName(entry)
     directRuns.forEach((run) => {
+      if (run.mode === MANUAL_MODE) return addChromeRead({ row, run, entry })
       const source = run.research.sources.find(({ name }) => name === sourceName)
       if (!source) return
       const status = STATUSES.includes(source.status) ? source.status : 'error'
@@ -204,6 +205,17 @@ const directStats = ({ item, runs, region }) => {
       if (useful.length) row.lastUseful = run.startedAt
     })
     return withState({ row, entry: off[entry.url], offState: DIRECT_OFF })
+  })
+}
+
+const addChromeRead = ({ row, run, entry }) => {
+  const read = runListings(run)
+    .some((listing) => bareUrl(listing.url).startsWith(bareUrl(entry.url)))
+  if (!read) return
+  row.lastChecked = run.startedAt
+  row.recent.push({
+    runId: run.id, at: run.startedAt, mode: MANUAL_MODE, status: 'ok',
+    note: 'Read in a Chrome check', url: row.url, urlKind: row.url ? PAGE_LINK : null
   })
 }
 
